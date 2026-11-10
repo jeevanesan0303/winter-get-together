@@ -1,11 +1,13 @@
 
 import {
   useEffect,
+  useRef,
   useState,
   type ChangeEvent,
   type CSSProperties,
   type FormEvent,
   type ReactNode,
+  type KeyboardEvent,
 } from "react";
 import {
   ArrowLeft,
@@ -762,45 +764,113 @@ function ContactPage() {
 }
 
 // =====================================================
-// LANGUAGE SWITCHER
+// ONE-TIME LANGUAGE SELECTION POPUP
 // =====================================================
 
-function LanguageSwitcher({
-  language,
-  onChange,
+const LANGUAGE_POPUP_STYLES = `
+.language-modal-overlay {
+  position: fixed; inset: 0; z-index: 99999;
+  display: flex; justify-content: center; align-items: center;
+  padding: 20px; background: rgba(3, 13, 42, .76);
+  backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px);
+}
+.language-modal {
+  width: min(100%, 420px); max-height: min(90dvh, 560px);
+  overflow-y: auto; padding: 30px 26px; text-align: center;
+  border: 1px solid rgba(210,224,255,.9); border-radius: 24px;
+  background: linear-gradient(145deg, #fff, #eef4ff);
+  box-shadow: 0 24px 80px rgba(0,9,45,.45);
+  animation: language-pop .25s ease-out;
+}
+.language-modal-icon {
+  width: 62px; height: 62px; margin: 0 auto 16px;
+  display: grid; place-items: center; border-radius: 18px;
+  background: #e8e4ff; color: #5b3cda;
+}
+.language-modal h2 { margin: 0 0 8px; color: #0b1c4a; font-size: 24px; line-height: 1.3; }
+.language-modal > p { margin: 0; color: #5b6a8b; line-height: 1.7; }
+.language-modal-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin: 25px 0 16px; }
+.language-modal-options button {
+  min-width: 0; min-height: 115px; border-radius: 15px;
+  border: 1px solid #d3ddf4; background: #fff; color: #19255a;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 7px; cursor: pointer;
+  transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+.language-modal-options button:hover { transform: translateY(-3px); border-color: #7961ed; box-shadow: 0 9px 26px rgba(81,55,180,.14); }
+.language-modal-options button:focus-visible { outline: 3px solid #6041da; outline-offset: 3px; }
+.language-option-title { font-size: 20px; font-weight: 800; }
+.language-option-subtitle { font-size: 12px; color: #637393; }
+.language-modal-note { font-size: 12px; }
+@keyframes language-pop { from { opacity: 0; transform: translateY(14px) scale(.97); } to {opacity: 1; transform: none;} }
+@media (max-width:700px) {
+  .language-modal { padding: 24px 18px; border-radius: 20px; }
+  .language-modal h2 { font-size: 21px; }
+  .language-modal-options button { min-height: 105px; }
+}
+@media (prefers-reduced-motion:reduce) { .language-modal { animation: none; } }
+`;
+
+function LanguageSelectionModal({
+  onSelect,
 }: {
-  language: FormLanguage;
-  onChange: (value: FormLanguage) => void;
+  onSelect: (language: FormLanguage) => void;
 }) {
+  const firstButtonRef = useRef<HTMLButtonElement>(null);
+  const secondButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const previousFocus = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    firstButtonRef.current?.focus();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus instanceof HTMLElement) previousFocus.focus();
+    };
+  }, []);
+
+  function handleModalKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== "Tab") return;
+    const first = firstButtonRef.current;
+    const last = secondButtonRef.current;
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last?.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first?.focus();
+    }
+  }
+
   return (
-    <div className="registration-language-bar">
-      <div className="registration-language-label">
-        <Languages size={17} />
-        <span>{FORM_TEXT[language].language}</span>
-      </div>
-
+    <div className="language-modal-overlay">
       <div
-        className="registration-language-switch"
-        role="group"
-        aria-label="Registration language"
+        className="language-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="language-modal-title"
+        aria-describedby="language-modal-description"
+        onKeyDown={handleModalKeyDown}
       >
-        <button
-          type="button"
-          className={language === "ta" ? "active" : ""}
-          aria-pressed={language === "ta"}
-          onClick={() => onChange("ta")}
-        >
-          தமிழ்
-        </button>
-
-        <button
-          type="button"
-          className={language === "en" ? "active" : ""}
-          aria-pressed={language === "en"}
-          onClick={() => onChange("en")}
-        >
-          English
-        </button>
+        <div className="language-modal-icon"><Languages size={30} /></div>
+        <h2 id="language-modal-title">Choose Your Language</h2>
+        <p id="language-modal-description" lang="ta">
+          படிவ மொழியைத் தெரிவுசெய்யவும்
+        </p>
+        <div className="language-modal-options">
+          <button ref={firstButtonRef} type="button" onClick={() => onSelect("ta")}>
+            <span className="language-option-title" lang="ta">தமிழ்</span>
+            <span className="language-option-subtitle">Tamil</span>
+            <ArrowRight size={18} aria-hidden="true" />
+          </button>
+          <button ref={secondButtonRef} type="button" onClick={() => onSelect("en")}>
+            <span className="language-option-title">English</span>
+            <span className="language-option-subtitle">English Form</span>
+            <ArrowRight size={18} aria-hidden="true" />
+          </button>
+        </div>
+        <p className="language-modal-note">Select your preferred language to continue registration.</p>
       </div>
     </div>
   );
@@ -1018,6 +1088,7 @@ function RegistrationPage({
 }) {
   const t = FORM_TEXT[language];
   const [step, setStep] = useState<Step>(1);
+  const [showLanguagePopup, setShowLanguagePopup] = useState(true);
 
   const [personal, setPersonal] = useState<PersonalInformation>(
     () => ({ ...EMPTY_PERSONAL })
@@ -1036,8 +1107,9 @@ function RegistrationPage({
     personal.country
   );
 
-  function changeLanguage(next: FormLanguage) {
+  function selectLanguage(next: FormLanguage) {
     onLanguageChange(next);
+    setShowLanguagePopup(false);
     setError("");
   }
 
@@ -1272,12 +1344,6 @@ function RegistrationPage({
           <h3>{t.pageTitle}</h3>
           <p>{t.subtitle}</p>
         </div>
-
-        {/* LANGUAGE SELECTOR AT TOP OF FORM */}
-        <LanguageSwitcher
-          language={language}
-          onChange={changeLanguage}
-        />
 
         <StepProgress step={step} language={language} />
 
@@ -1580,6 +1646,10 @@ function RegistrationPage({
       </div>
 
       <WinterWave />
+      <style>{LANGUAGE_POPUP_STYLES}</style>
+      {showLanguagePopup && (
+        <LanguageSelectionModal onSelect={selectLanguage} />
+      )}
     </section>
   );
 }
