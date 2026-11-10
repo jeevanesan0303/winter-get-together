@@ -482,6 +482,9 @@ function HomePage({ onRegister }: { onRegister: () => void }) {
             <p className="hero-subtitle">
               Let&apos;s come together to celebrate our community and culture
             </p>
+            <div className="desktop-registration-countdown">
+  <RegistrationCountdown />
+</div>
           </div>
         </div>
 

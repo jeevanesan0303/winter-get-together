@@ -3838,3 +3838,89 @@ input[type="tel"] {
     display: none !important;
   }
 }
+/* Registration countdown between subtitle and event information */
+
+.desktop-registration-countdown {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 28px;
+}
+
+.desktop-registration-countdown .event-countdown {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(390px, 100%);
+  margin: 0;
+}
+
+.desktop-registration-countdown .countdown-heading {
+  margin: 0;
+  color: #bcecff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 6px #002b69;
+}
+
+.desktop-registration-countdown .countdown-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.desktop-registration-countdown .countdown-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  background: rgba(9, 49, 117, 0.32);
+  border: 1px solid rgba(174, 224, 255, 0.42);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.desktop-registration-countdown .countdown-box strong {
+  color: #ffffff;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.desktop-registration-countdown .countdown-box span {
+  color: #a5eaff;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Mobile: compact countdown */
+@media (max-width: 700px) {
+  .desktop-registration-countdown {
+    margin-top: 18px;
+  }
+
+  .desktop-registration-countdown .event-countdown {
+    width: min(300px, 100%);
+    gap: 8px;
+  }
+
+  .desktop-registration-countdown .countdown-grid {
+    gap: 7px;
+  }
+
+  .desktop-registration-countdown .countdown-box {
+    padding: 9px 5px;
+  }
+
+  .desktop-registration-countdown .countdown-box strong {
+    font-size: 20px;
+  }
+
+  .desktop-registration-countdown .countdown-heading {
+    font-size: 10px;
+  }
+}
