@@ -7,7 +7,6 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-
 import {
   ArrowLeft,
   ArrowRight,
@@ -20,6 +19,7 @@ import {
   GraduationCap,
   Home,
   Hourglass,
+  Languages,
   Mail,
   MapPin,
   Phone,
@@ -30,11 +30,10 @@ import {
   UserRound,
   UsersRound,
 } from "lucide-react";
-
 import "./index.css";
 
 // =====================================================
-// EVENT DETAILS
+// EVENT CONFIGURATION - PRESERVED FROM YOUR FILE
 // =====================================================
 
 const EVENT = {
@@ -66,15 +65,10 @@ const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 // TYPES
 // =====================================================
 
-type Page =
-  | "home"
-  | "about"
-  | "contact"
-  | "register"
-  | "success";
-
+type Page = "home" | "about" | "contact" | "register" | "success";
 type Step = 1 | 2 | 3;
 type Country = "UK" | "LK";
+type FormLanguage = "ta" | "en";
 
 type PersonalInformation = {
   fullName: string;
@@ -88,7 +82,8 @@ type PersonalInformation = {
 
 type QuestionDefinition = {
   id: string;
-  question: string;
+  tamilQuestion: string;
+  englishQuestion: string;
   options: string[];
   positiveOptions: string[];
   uploadLabel: string;
@@ -107,7 +102,7 @@ type SavedRegistration = {
 };
 
 // =====================================================
-// PHONE CONFIGURATION
+// COUNTRY CODE CONFIGURATION
 // =====================================================
 
 const COUNTRY_OPTIONS = {
@@ -138,68 +133,202 @@ const EMPTY_PERSONAL: PersonalInformation = {
 };
 
 // =====================================================
-// ACHIEVEMENT QUESTIONS — ALL OPTIONAL
+// BILINGUAL TEXT
+// =====================================================
+
+const FORM_TEXT = {
+  ta: {
+    language: "படிவ மொழி",
+    pageTitle: "நிகழ்வுப் பதிவு",
+    subtitle: "நிகழ்வில் கலந்துகொள்ள உங்கள் விவரங்களைப் பதிவு செய்யவும்",
+    personalStep: "தனிப்பட்ட விவரங்கள்",
+    achievementsStep: "சாதனைகள்",
+    reviewStep: "சரிபார்ப்பு",
+    personalTitle: "தனிப்பட்ட தகவல்கள்",
+    achievementsTitle: "சாதனைகள் மற்றும் தகுதிகள்",
+    reviewTitle: "பதிவு விவரங்களைச் சரிபார்க்கவும்",
+    fullName: "முழுப் பெயர்",
+    namePlaceholder: "உங்கள் முழுப் பெயரை உள்ளிடவும்",
+    dob: "பிறந்த தேதி",
+    dobHint: "எதிர்காலத் தேதிகளைத் தெரிவுசெய்ய முடியாது.",
+    gender: "பாலினம்",
+    selectGender: "பாலினத்தைத் தெரிவுசெய்யவும்",
+    male: "ஆண்",
+    female: "பெண்",
+    phone: "தொடர்பு இலக்கம்",
+    address: "முழு முகவரி",
+    addressPlaceholder: "வீட்டு இலக்கம், வீதி, நகரம், அஞ்சல் குறியீடு, நாடு",
+    country: "நாடு",
+    previous: "முந்தையது",
+    next: "அடுத்த படி",
+    home: "முகப்பு",
+    submit: "பதிவைச் சமர்ப்பிக்கவும்",
+    submitting: "சமர்ப்பிக்கப்படுகிறது...",
+    clear: "நீக்கு",
+    notSelected: "தெரிவுசெய்யப்படவில்லை",
+    answer: "பதில்",
+    upload: "சான்றிதழைப் பதிவேற்றவும்",
+    uploadHint: "PDF, JPG அல்லது PNG — அதிகபட்சம் 20 MB",
+    selectedFile: "தேர்ந்தெடுக்கப்பட்ட கோப்பு",
+    reviewPersonal: "தனிப்பட்ட தகவல்கள்",
+    reviewAchievements: "சாதனைகள் மற்றும் தகுதிகள்",
+    confirmation:
+      "நான் வழங்கிய தகவல்கள் சரியானவை என்றும் நிகழ்வுப் பதிவிற்காக அவற்றைப் பயன்படுத்த ஒப்புக்கொள்கிறேன் என்றும் உறுதிப்படுத்துகிறேன்.",
+    introduction:
+      "உங்களுக்குப் பொருந்தும் சாதனைகளை மட்டும் தெரிவுசெய்யவும். அனைத்துக் கேள்விகளுக்கும் பதிலளிக்க வேண்டிய அவசியமில்லை. சாதனையைத் தெரிவுசெய்தால் அதற்கான சான்றிதழை இணைக்கவும்.",
+    invalidName: "உங்கள் முழுப் பெயரை உள்ளிடவும்.",
+    invalidDob: "சரியான பிறந்த தேதியை உள்ளிடவும். எதிர்காலத் தேதி அனுமதிக்கப்படாது.",
+    invalidGender: "பாலினத்தைத் தெரிவுசெய்யவும்.",
+    invalidAddress: "உங்கள் முழு முகவரியை உள்ளிடவும்.",
+    invalidPhone: "சரியான தொடர்பு இலக்கத்தை உள்ளிடவும்.",
+    missingProof: "தெரிவுசெய்த சாதனைக்கான சான்றிதழைப் பதிவேற்றவும்.",
+    invalidFile: "PDF, JPG அல்லது PNG கோப்பை மட்டும் பதிவேற்றவும்.",
+    fileSize: "கோப்பு அளவு 20 MB-ஐ விட அதிகமாக இருக்கக்கூடாது.",
+    invalidAnswer: "தெரிவுசெய்த பதில் சரியானதல்ல.",
+    confirmRequired: "விவரங்கள் சரியானவை என்பதை உறுதிப்படுத்தவும்.",
+    saveFailed: "பதிவைச் சேமிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+    success: "பதிவு வெற்றிகரமாக முடிந்தது!",
+    thankYou: "Winter Get Together நிகழ்விற்கு பதிவு செய்ததற்கு நன்றி.",
+    registrationId: "பதிவு இலக்கம்",
+    copy: "பதிவு இலக்கத்தை நகலெடுக்கவும்",
+    copied: "நகலெடுக்கப்பட்டது!",
+    saveReference: "உங்கள் பதிவு இலக்கத்தைச் சேமித்து வைத்துக்கொள்ளவும்.",
+    backHome: "முகப்பிற்குத் திரும்பவும்",
+  },
+  en: {
+    language: "Form Language",
+    pageTitle: "Event Registration",
+    subtitle: "Complete your details to join the event",
+    personalStep: "Personal Info",
+    achievementsStep: "Achievements",
+    reviewStep: "Review",
+    personalTitle: "Personal Information",
+    achievementsTitle: "Achievements & Qualifications",
+    reviewTitle: "Review Registration",
+    fullName: "Full Name",
+    namePlaceholder: "Enter your full name",
+    dob: "Date of Birth",
+    dobHint: "Future dates are not allowed.",
+    gender: "Gender",
+    selectGender: "Select gender",
+    male: "Male",
+    female: "Female",
+    phone: "Contact Number",
+    address: "Full Address",
+    addressPlaceholder: "House number, street, city, postcode, country",
+    country: "Country",
+    previous: "Previous",
+    next: "Next Step",
+    home: "Home",
+    submit: "Submit Registration",
+    submitting: "Submitting...",
+    clear: "Clear",
+    notSelected: "Not selected",
+    answer: "Answer",
+    upload: "Upload supporting proof",
+    uploadHint: "PDF, JPG or PNG — Maximum 20 MB",
+    selectedFile: "Selected file",
+    reviewPersonal: "Personal Information",
+    reviewAchievements: "Achievements & Qualifications",
+    confirmation:
+      "I confirm that the information provided is correct and agree to its use for event registration.",
+    introduction:
+      "Select only the achievements that apply to you. All questions are optional. If you select an achievement, you must upload the relevant supporting certificate.",
+    invalidName: "Please enter your full name.",
+    invalidDob: "Enter a valid date of birth. Future dates are not allowed.",
+    invalidGender: "Please select your gender.",
+    invalidAddress: "Please enter your full address.",
+    invalidPhone: "Please enter a valid contact number.",
+    missingProof: "Please upload a certificate for the selected achievement.",
+    invalidFile: "Only PDF, JPG and PNG documents are allowed.",
+    fileSize: "The maximum file size is 20 MB.",
+    invalidAnswer: "An invalid answer was selected.",
+    confirmRequired: "Please confirm that your details are correct.",
+    saveFailed: "Unable to save registration. Please try again.",
+    success: "Registration Successful!",
+    thankYou: "Thank you for registering for Winter Get Together.",
+    registrationId: "Registration ID",
+    copy: "Copy registration ID",
+    copied: "Copied!",
+    saveReference: "Please save your registration ID for future reference.",
+    backHome: "Back to Home",
+  },
+} as const;
+
+// =====================================================
+// SEVEN QUESTIONS - TAMIL AND ENGLISH
 // =====================================================
 
 const QUESTIONS: QuestionDefinition[] = [
   {
     id: "tamil_exam",
-    question:
+    tamilQuestion:
       "தமிழ் மேம்பாட்டுப் பேரவையின் தமிழ்ப் பரீட்சையில் Excellent அல்லது Very Good பெற்றுள்ளீர்களா?",
+    englishQuestion:
+      "Have you achieved Excellent or Very Good in the Tamil examination conducted by the Tamil Development Council?",
     options: ["Excellent", "Very Good"],
     positiveOptions: ["Excellent", "Very Good"],
-    uploadLabel: "Upload Tamil Examination Certificate",
+    uploadLabel: "Tamil Examination Certificate",
   },
   {
     id: "maths_competition",
-    question:
+    tamilQuestion:
       "சிதம்பரக் கணிதப் போட்டியில் A அல்லது A* தரத்தைப் பெற்றுள்ளீர்களா?",
+    englishQuestion:
+      "Have you achieved Grade A or A* in the Chithambara Mathematics Competition?",
     options: ["A", "A*"],
     positiveOptions: ["A", "A*"],
-    uploadLabel: "Upload Mathematics Competition Certificate",
+    uploadLabel: "Mathematics Competition Certificate",
   },
   {
     id: "grammar_school",
-    question:
+    tamilQuestion:
       "Grammar School தேர்வில் தேர்ச்சி பெற்றுள்ளீர்களா?",
-    options: [
-      "தேர்ச்சி பெற்றுள்ளேன்",
-      "தேர்ச்சி பெறவில்லை",
-    ],
+    englishQuestion:
+      "Have you passed the Grammar School entrance examination?",
+    options: ["தேர்ச்சி பெற்றுள்ளேன்", "தேர்ச்சி பெறவில்லை"],
     positiveOptions: ["தேர்ச்சி பெற்றுள்ளேன்"],
-    uploadLabel: "Upload Grammar School Result Proof",
+    uploadLabel: "Grammar School Result Proof",
   },
   {
     id: "gcse",
-    question:
+    tamilQuestion:
       "GCSE பரீட்சையில் குறைந்தபட்சம் 5A (New Grade 5 Seven) பெற்றுள்ளீர்களா?",
+    englishQuestion:
+      "Have you achieved at least five A grades (Grade 7 under the new grading system) in your GCSE examinations?",
     options: ["ஆம்", "இல்லை"],
     positiveOptions: ["ஆம்"],
-    uploadLabel: "Upload GCSE Certificate / Result Sheet",
+    uploadLabel: "GCSE Certificate / Result Sheet",
   },
   {
     id: "gce_al",
-    question:
+    tamilQuestion:
       "GCE A/L பரீட்சையில் A, B பெறுபேறுகளைப் பெற்றுள்ளீர்களா?",
+    englishQuestion:
+      "Have you achieved Grade A or B in your GCE A-Level examinations?",
     options: ["A", "B"],
     positiveOptions: ["A", "B"],
-    uploadLabel: "Upload GCE A/L Result Sheet",
+    uploadLabel: "GCE A/L Result Sheet",
   },
   {
     id: "university_degree",
-    question:
+    tamilQuestion:
       "பல்கலைக்கழகத்தில் பட்டம் பெற்றுள்ளீர்களா?",
+    englishQuestion:
+      "Have you obtained a university degree?",
     options: ["ஆம்", "இல்லை"],
     positiveOptions: ["ஆம்"],
-    uploadLabel: "Upload University Degree Certificate",
+    uploadLabel: "University Degree Certificate",
   },
   {
     id: "other_achievements",
-    question:
+    tamilQuestion:
       "கலை, கலாசாரம் மற்றும் விளையாட்டுத் துறைகளில் சாதனைகள் அல்லது பரிசுகள் பெற்றுள்ளீர்களா?",
+    englishQuestion:
+      "Have you received any awards, prizes or achievements in arts, culture or sports?",
     options: ["ஆம்", "இல்லை"],
     positiveOptions: ["ஆம்"],
-    uploadLabel: "Upload Achievement / Award Certificate",
+    uploadLabel: "Achievement / Award Certificate",
   },
 ];
 
@@ -208,22 +337,26 @@ const QUESTIONS: QuestionDefinition[] = [
 // =====================================================
 
 function initialAnswers(): Answers {
-  return Object.fromEntries(
-    QUESTIONS.map((question) => [question.id, ""])
-  );
+  return Object.fromEntries(QUESTIONS.map((q) => [q.id, ""]));
 }
 
 function initialProofFiles(): ProofFiles {
-  return Object.fromEntries(
-    QUESTIONS.map((question) => [question.id, null])
-  );
+  return Object.fromEntries(QUESTIONS.map((q) => [q.id, null]));
 }
 
-function needsProof(
-  question: QuestionDefinition,
-  answer: string
-): boolean {
-  return question.positiveOptions.includes(answer);
+function needsProof(q: QuestionDefinition, answer: string): boolean {
+  return q.positiveOptions.includes(answer);
+}
+
+function optionLabel(option: string, language: FormLanguage) {
+  if (language === "ta") return option;
+  const translations: Record<string, string> = {
+    ஆம்: "Yes",
+    இல்லை: "No",
+    "தேர்ச்சி பெற்றுள்ளேன்": "Passed",
+    "தேர்ச்சி பெறவில்லை": "Not Passed",
+  };
+  return translations[option] ?? option;
 }
 
 function todayLocal(): string {
@@ -234,7 +367,7 @@ function todayLocal(): string {
   return adjusted.toISOString().slice(0, 10);
 }
 
-function isValidDateOfBirth(value: string): boolean {
+function validDOB(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
 
   const [year, month, day] = value.split("-").map(Number);
@@ -248,64 +381,37 @@ function isValidDateOfBirth(value: string): boolean {
   );
 }
 
-function getNationalPhone(
-  phone: string,
-  country: Country
-): string {
+function getNationalPhone(phone: string, country: Country) {
   const code = COUNTRY_OPTIONS[country].code;
-  return phone.startsWith(code)
-    ? phone.slice(code.length)
-    : "";
+  return phone.startsWith(code) ? phone.slice(code.length) : "";
 }
 
-function isValidPhone(
-  personal: PersonalInformation
-): boolean {
+function validPhone(personal: PersonalInformation): boolean {
   const config = COUNTRY_OPTIONS[personal.country];
-  const national = getNationalPhone(
-    personal.phone,
-    personal.country
-  );
-
-  return (
-    national.length === config.length &&
-    /^\d+$/.test(national)
-  );
+  const national = getNationalPhone(personal.phone, personal.country);
+  return /^\d+$/.test(national) && national.length === config.length;
 }
 
-function isValidProofFile(file: File): boolean {
-  const validExtension =
-    /\.(pdf|jpe?g|png)$/i.test(file.name);
-
-  const validType = [
-    "application/pdf",
-    "image/jpeg",
-    "image/png",
-  ].includes(file.type);
-
+function validProof(file: File): boolean {
   return (
-    validExtension &&
-    validType &&
+    /\.(pdf|jpe?g|png)$/i.test(file.name) &&
+    ["application/pdf", "image/jpeg", "image/png"].includes(file.type) &&
     file.size > 0 &&
     file.size <= MAX_FILE_SIZE_BYTES
   );
 }
 
-function generateId(): string {
-  const random =
-    typeof crypto !== "undefined" &&
-    "randomUUID" in crypto
+function generateId() {
+  const suffix =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
       ? crypto.randomUUID().slice(0, 8).toUpperCase()
-      : Math.random()
-          .toString(36)
-          .slice(2, 10)
-          .toUpperCase();
+      : Math.random().toString(36).slice(2, 10).toUpperCase();
 
-  return `REG-${new Date().getFullYear()}-${random}`;
+  return `REG-${new Date().getFullYear()}-${suffix}`;
 }
 
 // =====================================================
-// LIVE REGISTRATION COUNTDOWN
+// COUNTDOWN
 // =====================================================
 
 function getCountdown() {
@@ -327,11 +433,8 @@ function RegistrationCountdown() {
   const [time, setTime] = useState(getCountdown);
 
   useEffect(() => {
-    const interval = window.setInterval(() => {
-      setTime(getCountdown());
-    }, 1000);
-
-    return () => window.clearInterval(interval);
+    const timer = window.setInterval(() => setTime(getCountdown()), 1000);
+    return () => window.clearInterval(timer);
   }, []);
 
   if (time.remaining === 0) {
@@ -351,16 +454,11 @@ function RegistrationCountdown() {
 
   return (
     <div className="event-countdown" aria-live="off">
-      <p className="countdown-heading">
-        REGISTRATION ENDS IN
-      </p>
-
+      <p className="countdown-heading">REGISTRATION ENDS IN</p>
       <div className="countdown-grid">
         {units.map((unit) => (
           <div className="countdown-box" key={unit.label}>
-            <strong>
-              {String(unit.value).padStart(2, "0")}
-            </strong>
+            <strong>{String(unit.value).padStart(2, "0")}</strong>
             <span>{unit.label}</span>
           </div>
         ))}
@@ -370,49 +468,40 @@ function RegistrationCountdown() {
 }
 
 // =====================================================
-// FALLING SNOW
+// WINTER BACKGROUND AND SNOW
 // =====================================================
 
-const SNOW_PARTICLES = Array.from(
-  { length: 75 },
-  (_, index) => ({
-    id: index,
-    left: (index * 47.37 + 13) % 100,
-    size: 2 + ((index * 7) % 7),
-    duration: 9 + ((index * 11) % 15),
-    delay: -((index * 13.71) % 24),
-    opacity: 0.22 + ((index * 3) % 7) / 12,
-    drift: -35 + ((index * 17) % 95),
-    blur: index % 7 === 0 ? 1.3 : 0,
-  })
-);
+const SNOW_PARTICLES = Array.from({ length: 75 }, (_, i) => ({
+  id: i,
+  left: (i * 47.37 + 13) % 100,
+  size: 2 + ((i * 7) % 7),
+  duration: 9 + ((i * 11) % 15),
+  delay: -((i * 13.71) % 24),
+  opacity: 0.22 + ((i * 3) % 7) / 12,
+  drift: -35 + ((i * 17) % 95),
+  blur: i % 7 === 0 ? 1.3 : 0,
+}));
 
-function FallingSnow({
-  count = 75,
-}: {
-  count?: number;
-}) {
+function FallingSnow({ count = 75 }: { count?: number }) {
   return (
     <div className="falling-snow" aria-hidden="true">
-      {SNOW_PARTICLES.slice(0, count).map((particle) => {
-        const style = {
-          "--snow-left": `${particle.left}%`,
-          "--snow-size": `${particle.size}px`,
-          "--snow-duration": `${particle.duration}s`,
-          "--snow-delay": `${particle.delay}s`,
-          "--snow-opacity": particle.opacity,
-          "--snow-drift": `${particle.drift}px`,
-          "--snow-blur": `${particle.blur}px`,
-        } as CSSProperties;
-
-        return (
-          <span
-            key={particle.id}
-            className="falling-snow-particle"
-            style={style}
-          />
-        );
-      })}
+      {SNOW_PARTICLES.slice(0, count).map((p) => (
+        <span
+          key={p.id}
+          className="falling-snow-particle"
+          style={
+            {
+              "--snow-left": `${p.left}%`,
+              "--snow-size": `${p.size}px`,
+              "--snow-duration": `${p.duration}s`,
+              "--snow-delay": `${p.delay}s`,
+              "--snow-opacity": p.opacity,
+              "--snow-drift": `${p.drift}px`,
+              "--snow-blur": `${p.blur}px`,
+            } as CSSProperties
+          }
+        />
+      ))}
     </div>
   );
 }
@@ -420,47 +509,30 @@ function FallingSnow({
 function SnowDecorations() {
   return (
     <div className="snow-layer" aria-hidden="true">
-      {[1, 2, 3, 4, 5, 6].map((number) => (
-        <Snowflake
-          key={number}
-          className={`snowflake snow-${number}`}
-        />
+      {[1, 2, 3, 4, 5, 6].map((n) => (
+        <Snowflake key={n} className={`snowflake snow-${n}`} />
       ))}
     </div>
   );
 }
 
-function WinterBackground({
-  light = false,
-}: {
-  light?: boolean;
-}) {
+function WinterBackground({ light = false }: { light?: boolean }) {
   return (
     <>
       <div
         className="winter-background"
-        style={{
-          backgroundImage: `url("${IMAGES.background}")`,
-        }}
+        style={{ backgroundImage: `url("${IMAGES.background}")` }}
       />
-
       <div
         className={
-          light
-            ? "success-background-overlay"
-            : "winter-overlay"
+          light ? "success-background-overlay" : "winter-overlay"
         }
       />
-
       <SnowDecorations />
       <FallingSnow count={light ? 45 : 75} />
     </>
   );
 }
-
-// =====================================================
-// WINTER WAVE
-// =====================================================
 
 function WinterWave() {
   return (
@@ -474,17 +546,14 @@ function WinterWave() {
         fill="#a3c8ff"
         d="M0 22C240 10 400 110 760 94c300-13 460-90 840-49v95H0Z"
       />
-
       <path
         fill="#ffffff"
         d="M0 48C265 22 421 131 790 111c306-16 506-93 810-43v72H0Z"
       />
-
       <path
         fill="#1769d8"
         d="M0 94c285-52 457 49 799 23 341-26 555-38 801-20v43H0Z"
       />
-
       <path
         fill="#e9f4ff"
         d="M0 109c307-33 513 51 827 24 305-26 548-45 773-14v21H0Z"
@@ -494,7 +563,7 @@ function WinterWave() {
 }
 
 // =====================================================
-// ORGANIZATION LOGOS
+// HOME PAGE - ORIGINAL DESIGN PRESERVED
 // =====================================================
 
 function OrganizationLogos() {
@@ -508,9 +577,7 @@ function OrganizationLogos() {
           draggable={false}
         />
       </div>
-
       <div className="logo-vertical-divider" />
-
       <div className="logo-frame animated-logo">
         <img
           src={IMAGES.logo2}
@@ -522,10 +589,6 @@ function OrganizationLogos() {
     </div>
   );
 }
-
-// =====================================================
-// EVENT INFORMATION CARD
-// =====================================================
 
 function EventInfoCard({
   icon,
@@ -541,12 +604,9 @@ function EventInfoCard({
   return (
     <div className="event-info-item">
       <div className="event-info-icon">{icon}</div>
-
       <div className="event-info-text">
         <span>{title}</span>
-        <strong
-          className={highlight ? "highlight-value" : ""}
-        >
+        <strong className={highlight ? "highlight-value" : ""}>
           {value}
         </strong>
       </div>
@@ -554,22 +614,11 @@ function EventInfoCard({
   );
 }
 
-// =====================================================
-// HOME PAGE
-// SINGLE COUNTDOWN, RESPONSIVE POSITION
-// =====================================================
-
-function HomePage({
-  onRegister,
-}: {
-  onRegister: () => void;
-}) {
+function HomePage({ onRegister }: { onRegister: () => void }) {
   return (
     <section className="winter-screen home-screen">
       <WinterBackground />
-
       <div className="home-layout">
-        {/* TOP: LOGOS, ENGLISH/TAMIL TITLE, SUBTITLE */}
         <div className="hero-top">
           <OrganizationLogos />
 
@@ -579,14 +628,8 @@ function HomePage({
           </div>
 
           <div className="hero-heading-group">
-            <h1 className="hero-main-title">
-              {EVENT.title}
-            </h1>
-
-            <h3
-              className="hero-tamil-title"
-              lang="ta"
-            >
+            <h1 className="hero-main-title">{EVENT.title}</h1>
+            <h3 className="hero-tamil-title" lang="ta">
               {EVENT.tamil}
             </h3>
 
@@ -599,20 +642,16 @@ function HomePage({
             </div>
 
             <p className="hero-subtitle">
-              Let&apos;s come together to celebrate our
-              community and culture
+              Let&apos;s come together to celebrate our community and culture
             </p>
           </div>
         </div>
 
-        {/* ONE COUNTDOWN:
-            DESKTOP: BETWEEN TITLE AND EVENT INFO
-            MOBILE: BELOW REGISTER BUTTON VIA CSS */}
+        {/* One countdown: middle desktop, bottom mobile */}
         <div className="home-countdown-placement">
           <RegistrationCountdown />
         </div>
 
-        {/* BOTTOM: EVENT INFO AND REGISTER BUTTON */}
         <div className="hero-bottom">
           <div className="event-info-bar">
             <EventInfoCard
@@ -620,19 +659,16 @@ function HomePage({
               title="Event Date"
               value={EVENT.date}
             />
-
             <EventInfoCard
               icon={<Clock3 />}
               title="Event Time"
               value={EVENT.time}
             />
-
             <EventInfoCard
               icon={<MapPin />}
               title="Event Venue"
               value={EVENT.venue}
             />
-
             <EventInfoCard
               icon={<Hourglass />}
               title="Registration Closes"
@@ -651,79 +687,57 @@ function HomePage({
           </button>
         </div>
       </div>
-
       <WinterWave />
     </section>
   );
 }
 
-// =====================================================
-// ABOUT PAGE
-// =====================================================
-
 function AboutPage() {
   return (
     <section className="winter-screen secondary-screen">
       <WinterBackground />
-
       <div className="info-page-content">
         <span className="section-kicker">
           <Sparkles size={15} />
           OUR COMMUNITY EVENT
         </span>
-
         <h1>About Winter Get Together</h1>
         <h2 lang="ta">{EVENT.tamil}</h2>
 
         <div className="information-glass-card">
           <UsersRound size={38} />
-
           <h3>Celebrating Community & Culture</h3>
-
           <p>
-            Winter Get Together brings families, friends
-            and members of our community together for a
-            special celebration of connection, friendship
-            and culture.
+            Winter Get Together brings families, friends and members of our
+            community together for a special celebration of connection,
+            friendship and culture.
           </p>
-
           <div className="about-organizers">
             <span>{EVENT.organizer1}</span>
             <span>{EVENT.organizer2}</span>
           </div>
         </div>
       </div>
-
       <WinterWave />
     </section>
   );
 }
 
-// =====================================================
-// CONTACT PAGE
-// =====================================================
-
 function ContactPage() {
   return (
     <section className="winter-screen secondary-screen">
       <WinterBackground />
-
       <div className="info-page-content">
-        <span className="section-kicker">
-          GET IN TOUCH
-        </span>
-
+        <span className="section-kicker">GET IN TOUCH</span>
         <h1>Contact Us</h1>
         <h2 lang="ta">{EVENT.tamil}</h2>
 
         <div className="information-glass-card">
           <Mail size={38} />
-
           <h3>Event Enquiries</h3>
-
           <p>
-            For event and registration enquiries,
-            please contact the organizing associations.
+            For event and registration enquiries, please contact the
+            organizing associations.
           </p>
 
           <div className="contact-items">
@@ -733,7 +747,6 @@ function ContactPage() {
                 {EVENT.email}
               </a>
             )}
-
             {EVENT.phone && (
               <a href={`tel:${EVENT.phone}`}>
                 <Phone size={19} />
@@ -743,26 +756,69 @@ function ContactPage() {
           </div>
         </div>
       </div>
-
       <WinterWave />
     </section>
   );
 }
 
 // =====================================================
-// REGISTRATION PROGRESS
+// LANGUAGE SWITCHER
+// =====================================================
+
+function LanguageSwitcher({
+  language,
+  onChange,
+}: {
+  language: FormLanguage;
+  onChange: (value: FormLanguage) => void;
+}) {
+  return (
+    <div className="registration-language-bar">
+      <div className="registration-language-label">
+        <Languages size={17} />
+        <span>{FORM_TEXT[language].language}</span>
+      </div>
+
+      <div
+        className="registration-language-switch"
+        role="group"
+        aria-label="Registration language"
+      >
+        <button
+          type="button"
+          className={language === "ta" ? "active" : ""}
+          aria-pressed={language === "ta"}
+          onClick={() => onChange("ta")}
+        >
+          தமிழ்
+        </button>
+
+        <button
+          type="button"
+          className={language === "en" ? "active" : ""}
+          aria-pressed={language === "en"}
+          onClick={() => onChange("en")}
+        >
+          English
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// =====================================================
+// PROGRESS INDICATOR
 // =====================================================
 
 function StepProgress({
   step,
+  language,
 }: {
   step: Step;
+  language: FormLanguage;
 }) {
-  const steps = [
-    "Personal Info",
-    "Achievements",
-    "Review",
-  ];
+  const t = FORM_TEXT[language];
+  const steps = [t.personalStep, t.achievementsStep, t.reviewStep];
 
   return (
     <div className="registration-progress">
@@ -778,13 +834,8 @@ function StepProgress({
               } ${completed ? "completed" : ""}`}
             >
               <div className="progress-circle">
-                {completed ? (
-                  <Check size={16} />
-                ) : (
-                  number
-                )}
+                {completed ? <Check size={16} /> : number}
               </div>
-
               <span>{label}</span>
             </div>
 
@@ -802,10 +853,6 @@ function StepProgress({
   );
 }
 
-// =====================================================
-// REUSABLE FORM FIELD
-// =====================================================
-
 function FormField({
   label,
   required = false,
@@ -819,11 +866,8 @@ function FormField({
     <div className="form-field">
       <label>
         {label}
-        {required && (
-          <span className="required"> *</span>
-        )}
+        {required && <span className="required"> *</span>}
       </label>
-
       {children}
     </div>
   );
@@ -839,13 +883,13 @@ function ReviewItem({
   return (
     <div className="review-item">
       <span>{label}</span>
-      <strong>{value || "Not provided"}</strong>
+      <strong>{value || "—"}</strong>
     </div>
   );
 }
 
 // =====================================================
-// OPTIONAL ACHIEVEMENT QUESTION
+// ACHIEVEMENT QUESTION: ONE ANSWER ONLY
 // =====================================================
 
 function AchievementQuestion({
@@ -853,6 +897,7 @@ function AchievementQuestion({
   question,
   answer,
   proof,
+  language,
   onAnswer,
   onClear,
   onFileChange,
@@ -861,22 +906,23 @@ function AchievementQuestion({
   question: QuestionDefinition;
   answer: string;
   proof: File | null;
+  language: FormLanguage;
   onAnswer: (option: string) => void;
   onClear: () => void;
-  onFileChange: (
-    event: ChangeEvent<HTMLInputElement>
-  ) => void;
+  onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
+  const t = FORM_TEXT[language];
   const proofRequired = needsProof(question, answer);
 
   return (
     <div className="achievement-question">
       <div className="achievement-question-title">
-        <span className="achievement-number">
-          {number}
-        </span>
-
-        <h4 lang="ta">{question.question}</h4>
+        <span className="achievement-number">{number}</span>
+        <h4 lang={language}>
+          {language === "ta"
+            ? question.tamilQuestion
+            : question.englishQuestion}
+        </h4>
       </div>
 
       <div className="achievement-options">
@@ -893,12 +939,11 @@ function AchievementQuestion({
               <input
                 type="radio"
                 name={`achievement-${question.id}`}
-                value={option}
                 checked={checked}
+                value={option}
                 onChange={() => onAnswer(option)}
               />
-
-              <span>{option}</span>
+              <span>{optionLabel(option, language)}</span>
 
               {checked && (
                 <Check
@@ -916,7 +961,7 @@ function AchievementQuestion({
             className="achievement-clear-button"
             onClick={onClear}
           >
-            Clear
+            {t.clear}
           </button>
         )}
       </div>
@@ -925,29 +970,18 @@ function AchievementQuestion({
         <div className="achievement-proof">
           <div className="achievement-proof-heading">
             <FileCheck2 size={18} />
-
             <span>
-              {question.uploadLabel}
+              {language === "ta"
+                ? `${question.uploadLabel} — சான்றிதழ்`
+                : `Upload ${question.uploadLabel}`}
               <span className="required"> *</span>
             </span>
           </div>
 
           <label className="file-upload">
-            {proof ? (
-              <FileCheck2 />
-            ) : (
-              <UploadCloud />
-            )}
-
-            <span>
-              {proof?.name ||
-                "Click to upload supporting proof"}
-            </span>
-
-            <small>
-              PDF, JPG or PNG — Maximum{" "}
-              {MAX_FILE_SIZE_MB} MB
-            </small>
+            {proof ? <FileCheck2 /> : <UploadCloud />}
+            <span>{proof?.name || t.upload}</span>
+            <small>{t.uploadHint}</small>
 
             {proof && (
               <small>
@@ -974,98 +1008,82 @@ function AchievementQuestion({
 function RegistrationPage({
   onSuccess,
   onBackHome,
+  language,
+  onLanguageChange,
 }: {
   onSuccess: (id: string) => void;
   onBackHome: () => void;
+  language: FormLanguage;
+  onLanguageChange: (value: FormLanguage) => void;
 }) {
+  const t = FORM_TEXT[language];
   const [step, setStep] = useState<Step>(1);
 
-  const [personal, setPersonal] =
-    useState<PersonalInformation>(
-      () => ({ ...EMPTY_PERSONAL })
-    );
-
-  const [answers, setAnswers] =
-    useState<Answers>(initialAnswers);
-
-  const [proofFiles, setProofFiles] =
-    useState<ProofFiles>(initialProofFiles);
+  const [personal, setPersonal] = useState<PersonalInformation>(
+    () => ({ ...EMPTY_PERSONAL })
+  );
+  const [answers, setAnswers] = useState<Answers>(initialAnswers);
+  const [proofFiles, setProofFiles] = useState<ProofFiles>(
+    initialProofFiles
+  );
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // ---------------------------------------------------
-  // PERSONAL DETAILS
-  // ---------------------------------------------------
+  const country = COUNTRY_OPTIONS[personal.country];
+  const nationalPhone = getNationalPhone(
+    personal.phone,
+    personal.country
+  );
 
-  function updatePersonal<
-    K extends keyof PersonalInformation
-  >(
-    key: K,
+  function changeLanguage(next: FormLanguage) {
+    onLanguageChange(next);
+    setError("");
+  }
+
+  function updatePersonal<K extends keyof PersonalInformation>(
+    field: K,
     value: PersonalInformation[K]
   ) {
-    setPersonal((current) => ({
-      ...current,
-      [key]: value,
-    }));
-
+    setPersonal((current) => ({ ...current, [field]: value }));
     setError("");
   }
 
-  function changeCountry(country: Country) {
+  function changeCountry(value: Country) {
     setPersonal((current) => ({
       ...current,
-      country,
+      country: value,
       phone: "",
     }));
-
     setError("");
   }
 
-  function changePhone(
-    event: ChangeEvent<HTMLInputElement>
-  ) {
-    const config = COUNTRY_OPTIONS[personal.country];
-
+  function changePhone(event: ChangeEvent<HTMLInputElement>) {
     let digits = event.target.value.replace(/\D/g, "");
 
-    if (
-      personal.country === "LK" &&
-      digits.startsWith("0")
-    ) {
+    if (personal.country === "LK" && digits.startsWith("0")) {
       digits = digits.slice(1);
     }
 
-    digits = digits.slice(0, config.length);
+    digits = digits.slice(0, country.length);
 
     setPersonal((current) => ({
       ...current,
-      phone: digits
-        ? `${config.code}${digits}`
-        : "",
+      phone: digits ? `${country.code}${digits}` : "",
     }));
-
     setError("");
   }
 
-  // ---------------------------------------------------
-  // ACHIEVEMENT ANSWERS
-  // ---------------------------------------------------
-
-  function updateAnswer(
-    question: QuestionDefinition,
-    option: string
-  ) {
+  function updateAnswer(q: QuestionDefinition, option: string) {
     setAnswers((current) => ({
       ...current,
-      [question.id]: option,
+      [q.id]: option,
     }));
 
     setProofFiles((current) => ({
       ...current,
-      [question.id]: null,
+      [q.id]: null,
     }));
-
     setError("");
   }
 
@@ -1079,46 +1097,27 @@ function RegistrationPage({
       ...current,
       [questionId]: null,
     }));
-
     setError("");
   }
-
-  // ---------------------------------------------------
-  // FILE UPLOAD VALIDATION — 20 MB
-  // ---------------------------------------------------
 
   function handleProof(
     questionId: string,
     event: ChangeEvent<HTMLInputElement>
   ) {
-    const file = event.target.files?.[0] || null;
-
+    const file = event.target.files?.[0] ?? null;
     if (!file) return;
 
     if (
       !/\.(pdf|jpe?g|png)$/i.test(file.name) ||
-      ![
-        "application/pdf",
-        "image/jpeg",
-        "image/png",
-      ].includes(file.type)
+      !["application/pdf", "image/jpeg", "image/png"].includes(file.type)
     ) {
-      setError(
-        "Only PDF, JPG and PNG files are allowed."
-      );
-
+      setError(t.invalidFile);
       event.target.value = "";
       return;
     }
 
-    if (
-      file.size === 0 ||
-      file.size > MAX_FILE_SIZE_BYTES
-    ) {
-      setError(
-        `Please select a non-empty file up to ${MAX_FILE_SIZE_MB} MB.`
-      );
-
+    if (file.size === 0 || file.size > MAX_FILE_SIZE_BYTES) {
+      setError(t.fileSize);
       event.target.value = "";
       return;
     }
@@ -1127,94 +1126,42 @@ function RegistrationPage({
       ...current,
       [questionId]: file,
     }));
-
     setError("");
   }
 
-  // ---------------------------------------------------
-  // VALIDATION
-  // ---------------------------------------------------
-
   function validatePersonal(): string {
-    if (personal.fullName.trim().length < 3) {
-      return "Please enter your full name.";
+    if (personal.fullName.trim().length < 3) return t.invalidName;
+    if (!validDOB(personal.dob)) return t.invalidDob;
+
+    if (!["Male", "Female"].includes(personal.gender)) {
+      return t.invalidGender;
     }
 
-    if (!isValidDateOfBirth(personal.dob)) {
-      return (
-        "Date of birth must be a valid date, " +
-        "not in the future."
-      );
+    if (!validPhone(personal)) {
+      return `${t.invalidPhone} (${country.code}, ${country.length} digits)`;
     }
 
-    if (
-      personal.gender !== "Male" &&
-      personal.gender !== "Female"
-    ) {
-      return "Please select your gender.";
-    }
-
-    if (!isValidPhone(personal)) {
-      const config =
-        COUNTRY_OPTIONS[personal.country];
-
-      return (
-        `Please enter exactly ${config.length} ` +
-        `digits after ${config.code}.`
-      );
-    }
-
-    if (personal.address.trim().length < 8) {
-      return "Please enter your full address.";
-    }
-
+    if (personal.address.trim().length < 8) return t.invalidAddress;
     return "";
   }
 
   function validateAchievements(): string {
-    for (
-      let index = 0;
-      index < QUESTIONS.length;
-      index++
-    ) {
-      const question = QUESTIONS[index];
-      const answer = answers[question.id] || "";
-
-      // All questions can be skipped.
+    // Every question is optional.
+    // Proof becomes mandatory only after a qualifying answer.
+    for (const q of QUESTIONS) {
+      const answer = answers[q.id] || "";
       if (!answer) continue;
 
-      if (!question.options.includes(answer)) {
-        return (
-          `Invalid answer for question ${index + 1}.`
-        );
-      }
+      if (!q.options.includes(answer)) return t.invalidAnswer;
 
-      if (needsProof(question, answer)) {
-        const file = proofFiles[question.id];
-
-        if (!file) {
-          return (
-            `Upload supporting proof for question ` +
-            `${index + 1}, or clear the answer.`
-          );
-        }
-
-        if (!isValidProofFile(file)) {
-          return (
-            `Question ${index + 1}: File must be ` +
-            `PDF, JPG or PNG and no larger than ` +
-            `${MAX_FILE_SIZE_MB} MB.`
-          );
-        }
+      if (needsProof(q, answer)) {
+        const proof = proofFiles[q.id];
+        if (!proof) return `${t.missingProof} (${q.id})`;
+        if (!validProof(proof)) return t.invalidFile;
       }
     }
-
     return "";
   }
-
-  // ---------------------------------------------------
-  // NAVIGATE BETWEEN STEPS
-  // ---------------------------------------------------
 
   function scrollToTop() {
     const container = document.querySelector(
@@ -1222,18 +1169,13 @@ function RegistrationPage({
     );
 
     if (container instanceof HTMLElement) {
-      container.scrollTo({
-        top: 0,
-        behavior: "instant",
-      });
+      container.scrollTo({ top: 0, behavior: "instant" });
     }
   }
 
   function nextStep() {
     const problem =
-      step === 1
-        ? validatePersonal()
-        : validateAchievements();
+      step === 1 ? validatePersonal() : validateAchievements();
 
     if (problem) {
       setError(problem);
@@ -1241,77 +1183,48 @@ function RegistrationPage({
     }
 
     setError("");
-
-    setStep(
-      (current) => Math.min(3, current + 1) as Step
-    );
-
+    setStep((current) => Math.min(3, current + 1) as Step);
     scrollToTop();
   }
 
   function previousStep() {
     setError("");
-
-    setStep(
-      (current) => Math.max(1, current - 1) as Step
-    );
-
+    setStep((current) => Math.max(1, current - 1) as Step);
     scrollToTop();
   }
 
-  // ---------------------------------------------------
-  // SUBMIT REGISTRATION
-  // ---------------------------------------------------
-
-  function submit(
-    event: FormEvent<HTMLFormElement>
-  ) {
+  function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const problem =
-      validatePersonal() || validateAchievements();
-
+    const problem = validatePersonal() || validateAchievements();
     if (problem) {
       setError(problem);
       return;
     }
 
     if (!personal.agreed) {
-      setError(
-        "Please confirm that your details are correct."
-      );
+      setError(t.confirmRequired);
       return;
     }
 
     if (submitting) return;
-
     setSubmitting(true);
     setError("");
 
     try {
-      const raw =
-        localStorage.getItem(STORAGE_KEY);
-
-      const parsed: unknown = raw
-        ? JSON.parse(raw)
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const parsed: unknown = raw ? JSON.parse(raw) : [];
+      const saved: SavedRegistration[] = Array.isArray(parsed)
+        ? parsed
         : [];
 
-      const saved: SavedRegistration[] =
-        Array.isArray(parsed) ? parsed : [];
+      const documents: Record<string, string | null> = {};
 
-      const documents: Record<
-        string,
-        string | null
-      > = {};
-
-      QUESTIONS.forEach((question) => {
-        const answer =
-          answers[question.id] || "";
-
-        documents[question.id] =
-          needsProof(question, answer)
-            ? proofFiles[question.id]?.name || null
-            : null;
+      QUESTIONS.forEach((q) => {
+        const answer = answers[q.id] || "";
+        documents[q.id] = needsProof(q, answer)
+          ? proofFiles[q.id]?.name || null
+          : null;
       });
 
       const id = generateId();
@@ -1336,28 +1249,17 @@ function RegistrationPage({
 
       onSuccess(id);
     } catch {
-      setError(
-        "Unable to save registration. Please try again."
-      );
+      setError(t.saveFailed);
     } finally {
       setSubmitting(false);
     }
   }
 
-  const country =
-    COUNTRY_OPTIONS[personal.country];
-
-  const nationalPhone = getNationalPhone(
-    personal.phone,
-    personal.country
-  );
-
-  // ===================================================
-  // REGISTRATION UI
-  // ===================================================
-
   return (
-    <section className="winter-screen registration-screen">
+    <section
+      className="winter-screen registration-screen"
+      lang={language}
+    >
       <div className="registration-top-banner">
         <Snowflake className="banner-snowflake" />
       </div>
@@ -1365,21 +1267,19 @@ function RegistrationPage({
       <div className="registration-main">
         <div className="registration-intro">
           <h1>Winter Get Together</h1>
-
-          <h2 lang="ta">
-            {EVENT.tamil}
-          </h2>
-
+          <h2 lang="ta">{EVENT.tamil}</h2>
           <div className="registration-heading-line" />
-
-          <h3>Event Registration</h3>
-
-          <p>
-            Complete your details to join the event
-          </p>
+          <h3>{t.pageTitle}</h3>
+          <p>{t.subtitle}</p>
         </div>
 
-        <StepProgress step={step} />
+        {/* LANGUAGE SELECTOR AT TOP OF FORM */}
+        <LanguageSwitcher
+          language={language}
+          onChange={changeLanguage}
+        />
+
+        <StepProgress step={step} language={language} />
 
         <form
           className="registration-form"
@@ -1387,110 +1287,71 @@ function RegistrationPage({
           noValidate
         >
           <div className="registration-card">
-            {/* ====================================
-                STEP 1 — PERSONAL INFORMATION
-            ==================================== */}
-
+            {/* STEP 1: PERSONAL DETAILS */}
             {step === 1 && (
               <>
                 <div className="card-heading">
                   <UserRound />
-                  <h3>Personal Information</h3>
+                  <h3>{t.personalTitle}</h3>
                 </div>
 
                 <div className="fields-grid">
-                  <FormField
-                    label="Full Name"
-                    required
-                  >
+                  <FormField label={t.fullName} required>
                     <input
                       type="text"
                       autoComplete="name"
-                      placeholder="Enter your full name"
+                      placeholder={t.namePlaceholder}
                       value={personal.fullName}
-                      onChange={(event) =>
-                        updatePersonal(
-                          "fullName",
-                          event.target.value
-                        )
+                      onChange={(e) =>
+                        updatePersonal("fullName", e.target.value)
                       }
                     />
                   </FormField>
 
-                  <FormField
-                    label="Date of Birth"
-                    required
-                  >
+                  <FormField label={t.dob} required>
                     <input
                       type="date"
                       max={todayLocal()}
                       value={personal.dob}
-                      onChange={(event) =>
+                      onChange={(e) =>
                         updatePersonal(
                           "dob",
-                          event.target.value <= todayLocal()
-                            ? event.target.value
+                          e.target.value <= todayLocal()
+                            ? e.target.value
                             : ""
                         )
                       }
                     />
-
-                    <small className="field-help">
-                      Future dates are not allowed.
-                    </small>
+                    <small className="field-help">{t.dobHint}</small>
                   </FormField>
 
-                  <FormField
-                    label="Gender"
-                    required
-                  >
+                  <FormField label={t.gender} required>
                     <div className="select-control">
                       <select
                         value={personal.gender}
-                        onChange={(event) =>
-                          updatePersonal(
-                            "gender",
-                            event.target.value
-                          )
+                        onChange={(e) =>
+                          updatePersonal("gender", e.target.value)
                         }
                       >
-                        <option value="">
-                          Select gender
-                        </option>
-
-                        <option value="Male">
-                          Male
-                        </option>
-
-                        <option value="Female">
-                          Female
-                        </option>
+                        <option value="">{t.selectGender}</option>
+                        <option value="Male">{t.male}</option>
+                        <option value="Female">{t.female}</option>
                       </select>
                     </div>
                   </FormField>
 
-                  <FormField
-                    label="Contact Number"
-                    required
-                  >
+                  <FormField label={t.phone} required>
                     <div className="international-phone-wrapper">
                       <select
                         className="phone-country-select"
                         value={personal.country}
-                        onChange={(event) =>
-                          changeCountry(
-                            event.target.value as Country
-                          )
+                        aria-label="Country calling code"
+                        onChange={(e) =>
+                          changeCountry(e.target.value as Country)
                         }
-                        aria-label="Select country code"
                       >
-                        <option value="UK">
-                          🇬🇧 +44
-                        </option>
-
-                        <option value="LK">
-                          🇱🇰 +94
-                        </option>
+                        <option value="UK">🇬🇧 +44</option>
+                        <option value="LK">🇱🇰 +94</option>
                       </select>
 
                       <input
@@ -1501,34 +1362,30 @@ function RegistrationPage({
                         maxLength={country.length}
                         value={nationalPhone}
                         onChange={changePhone}
-                        aria-label={`${country.name} phone number`}
+                        aria-label={t.phone}
                       />
                     </div>
 
                     <small className="uk-phone-hint">
-                      Enter {country.length} digits after{" "}
-                      {country.code}.
+                      {country.code} — {country.length}{" "}
+                      {language === "ta" ? "இலக்கங்கள்" : "digits"}
                       {personal.country === "LK"
-                        ? " Do not include the leading 0."
+                        ? language === "ta"
+                          ? " (முதலில் 0 சேர்க்க வேண்டாம்)"
+                          : " (without leading 0)"
                         : ""}
                     </small>
                   </FormField>
 
                   <div className="grid-full">
-                    <FormField
-                      label="Full Address"
-                      required
-                    >
+                    <FormField label={t.address} required>
                       <textarea
                         rows={3}
                         autoComplete="street-address"
-                        placeholder="House number, street, city, postcode, country"
+                        placeholder={t.addressPlaceholder}
                         value={personal.address}
-                        onChange={(event) =>
-                          updatePersonal(
-                            "address",
-                            event.target.value
-                          )
+                        onChange={(e) =>
+                          updatePersonal("address", e.target.value)
                         }
                       />
                     </FormField>
@@ -1537,172 +1394,124 @@ function RegistrationPage({
               </>
             )}
 
-            {/* ====================================
-                STEP 2 — ACHIEVEMENTS
-            ==================================== */}
-
+            {/* STEP 2: ACHIEVEMENTS */}
             {step === 2 && (
               <>
                 <div className="card-heading">
                   <GraduationCap />
-
-                  <h3>
-                    Achievements & Qualifications
-                  </h3>
+                  <h3>{t.achievementsTitle}</h3>
                 </div>
 
-                <p
-                  className="achievement-introduction"
-                  lang="ta"
-                >
-                  உங்களுக்குப் பொருந்தும் சாதனைகளை மட்டும்
-                  தெரிவுசெய்யவும். அனைத்துக் கேள்விகளுக்கும்
-                  பதிலளிக்க வேண்டிய அவசியமில்லை.
-                  சாதனையைத் தெரிவுசெய்தால் அதற்கான
-                  சான்றிதழை இணைக்கவும்.
+                <p className="achievement-introduction">
+                  {t.introduction}
                 </p>
 
                 <div className="achievement-question-list">
-                  {QUESTIONS.map(
-                    (question, index) => (
-                      <AchievementQuestion
-                        key={question.id}
-                        number={index + 1}
-                        question={question}
-                        answer={
-                          answers[question.id] || ""
-                        }
-                        proof={
-                          proofFiles[question.id] || null
-                        }
-                        onAnswer={(option) =>
-                          updateAnswer(
-                            question,
-                            option
-                          )
-                        }
-                        onClear={() =>
-                          clearAnswer(question.id)
-                        }
-                        onFileChange={(event) =>
-                          handleProof(
-                            question.id,
-                            event
-                          )
-                        }
-                      />
-                    )
-                  )}
+                  {QUESTIONS.map((q, index) => (
+                    <AchievementQuestion
+                      key={q.id}
+                      number={index + 1}
+                      question={q}
+                      language={language}
+                      answer={answers[q.id] || ""}
+                      proof={proofFiles[q.id] || null}
+                      onAnswer={(option) =>
+                        updateAnswer(q, option)
+                      }
+                      onClear={() => clearAnswer(q.id)}
+                      onFileChange={(e) => handleProof(q.id, e)}
+                    />
+                  ))}
                 </div>
               </>
             )}
 
-            {/* ====================================
-                STEP 3 — REVIEW
-            ==================================== */}
-
+            {/* STEP 3: REVIEW */}
             {step === 3 && (
               <>
                 <div className="card-heading">
                   <ShieldCheck />
-                  <h3>Review Registration</h3>
+                  <h3>{t.reviewTitle}</h3>
                 </div>
 
                 <div className="review-section">
-                  <h4>Personal Information</h4>
+                  <h4>{t.reviewPersonal}</h4>
 
                   <div className="review-grid">
                     <ReviewItem
-                      label="Full Name"
+                      label={t.fullName}
                       value={personal.fullName}
                     />
-
                     <ReviewItem
-                      label="Date of Birth"
+                      label={t.dob}
                       value={personal.dob}
                     />
-
                     <ReviewItem
-                      label="Gender"
-                      value={personal.gender}
+                      label={t.gender}
+                      value={
+                        personal.gender === "Male"
+                          ? t.male
+                          : personal.gender === "Female"
+                            ? t.female
+                            : ""
+                      }
                     />
-
                     <ReviewItem
-                      label="Country"
+                      label={t.country}
                       value={country.name}
                     />
-
                     <ReviewItem
-                      label="Contact Number"
+                      label={t.phone}
                       value={personal.phone}
                     />
-
                     <ReviewItem
-                      label="Full Address"
+                      label={t.address}
                       value={personal.address}
                     />
                   </div>
                 </div>
 
                 <div className="review-section">
-                  <h4>
-                    Achievements & Qualifications
-                  </h4>
+                  <h4>{t.reviewAchievements}</h4>
 
                   <div className="achievement-review-list">
-                    {QUESTIONS.map(
-                      (question, index) => {
-                        const answer =
-                          answers[question.id] || "";
+                    {QUESTIONS.map((q, index) => {
+                      const answer = answers[q.id] || "";
+                      const file = proofFiles[q.id];
 
-                        const file =
-                          proofFiles[question.id];
+                      return (
+                        <div
+                          key={q.id}
+                          className="achievement-review-item"
+                        >
+                          <p lang={language}>
+                            <strong>{index + 1}.</strong>{" "}
+                            {language === "ta"
+                              ? q.tamilQuestion
+                              : q.englishQuestion}
+                          </p>
 
-                        return (
-                          <div
-                            key={question.id}
-                            className="achievement-review-item"
-                          >
-                            <p lang="ta">
-                              <strong>
-                                {index + 1}.
-                              </strong>{" "}
-                              {question.question}
-                            </p>
-
-                            <div className="achievement-review-answer">
-                              <span>Answer:</span>
-
-                              <strong>
-                                {answer || "Not selected"}
-                              </strong>
-                            </div>
-
-                            {needsProof(
-                              question,
-                              answer
-                            ) &&
-                              file && (
-                                <div className="achievement-review-proof">
-                                  <FileCheck2 size={16} />
-
-                                  <span>
-                                    {file.name}
-                                  </span>
-
-                                  <small>
-                                    (
-                                    {(
-                                      file.size / 1048576
-                                    ).toFixed(2)}
-                                    {" "}MB)
-                                  </small>
-                                </div>
-                              )}
+                          <div className="achievement-review-answer">
+                            <span>{t.answer}:</span>
+                            <strong>
+                              {answer
+                                ? optionLabel(answer, language)
+                                : t.notSelected}
+                            </strong>
                           </div>
-                        );
-                      }
-                    )}
+
+                          {needsProof(q, answer) && file && (
+                            <div className="achievement-review-proof">
+                              <FileCheck2 size={16} />
+                              <span>{file.name}</span>
+                              <small>
+                                ({(file.size / 1048576).toFixed(2)} MB)
+                              </small>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1710,34 +1519,21 @@ function RegistrationPage({
                   <input
                     type="checkbox"
                     checked={personal.agreed}
-                    onChange={(event) =>
-                      updatePersonal(
-                        "agreed",
-                        event.target.checked
-                      )
+                    onChange={(e) =>
+                      updatePersonal("agreed", e.target.checked)
                     }
                   />
-
-                  I confirm the information provided
-                  is correct and agree to its use
-                  for event registration.
+                  {t.confirmation}
                 </label>
               </>
             )}
 
             {error && (
-              <div
-                className="form-error"
-                role="alert"
-              >
+              <div className="form-error" role="alert">
                 {error}
               </div>
             )}
           </div>
-
-          {/* ====================================
-              FORM BUTTONS
-          ==================================== */}
 
           <div className="form-bottom-actions">
             {step > 1 ? (
@@ -1747,7 +1543,7 @@ function RegistrationPage({
                 onClick={previousStep}
               >
                 <ArrowLeft size={17} />
-                Previous
+                {t.previous}
               </button>
             ) : (
               <button
@@ -1756,7 +1552,7 @@ function RegistrationPage({
                 onClick={onBackHome}
               >
                 <ArrowLeft size={17} />
-                Home
+                {t.home}
               </button>
             )}
 
@@ -1766,7 +1562,7 @@ function RegistrationPage({
                 className="form-next-button"
                 onClick={nextStep}
               >
-                Next Step
+                {t.next}
                 <ArrowRight size={17} />
               </button>
             ) : (
@@ -1775,10 +1571,7 @@ function RegistrationPage({
                 className="form-next-button"
                 disabled={submitting}
               >
-                {submitting
-                  ? "Submitting..."
-                  : "Submit Registration"}
-
+                {submitting ? t.submitting : t.submit}
                 <CheckCircle2 size={18} />
               </button>
             )}
@@ -1792,17 +1585,20 @@ function RegistrationPage({
 }
 
 // =====================================================
-// SUCCESS PAGE
+// SUCCESS PAGE - BILINGUAL
 // =====================================================
 
 function SuccessPage({
   id,
+  language,
   onHome,
 }: {
   id: string;
+  language: FormLanguage;
   onHome: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const t = FORM_TEXT[language];
 
   async function copyId() {
     try {
@@ -1814,63 +1610,43 @@ function SuccessPage({
   }
 
   return (
-    <section className="winter-screen success-screen">
+    <section className="winter-screen success-screen" lang={language}>
       <WinterBackground light />
 
       <div className="success-container">
         <div className="success-icon-outer">
           <div className="success-icon">
-            <Check
-              size={56}
-              strokeWidth={3.5}
-            />
+            <Check size={56} strokeWidth={3.5} />
           </div>
         </div>
 
-        <h1>Registration Successful!</h1>
-
-        <p>
-          Thank you for registering for
-          Winter Get Together.
-        </p>
+        <h1>{t.success}</h1>
+        <p>{t.thankYou}</p>
 
         <div className="success-reference">
-          <span>Registration ID</span>
-
+          <span>{t.registrationId}</span>
           <div>
             <strong>{id}</strong>
-
             <button
               type="button"
               onClick={copyId}
-              aria-label="Copy registration ID"
+              aria-label={t.copy}
             >
-              {copied ? (
-                <Check size={20} />
-              ) : (
-                <Copy size={20} />
-              )}
+              {copied ? <Check size={20} /> : <Copy size={20} />}
             </button>
           </div>
-
-          {copied && <small>Copied!</small>}
+          {copied && <small>{t.copied}</small>}
         </div>
 
-        <p className="reference-note">
-          Please save your registration ID
-          for future reference.
-        </p>
+        <p className="reference-note">{t.saveReference}</p>
 
         <button
           type="button"
           className="success-home-button"
           onClick={onHome}
         >
-          <Home
-            size={18}
-            fill="currentColor"
-          />
-          Back to Home
+          <Home size={18} fill="currentColor" />
+          {t.backHome}
         </button>
       </div>
 
@@ -1880,30 +1656,20 @@ function SuccessPage({
 }
 
 // =====================================================
-// MAIN APPLICATION
+// MAIN APP
 // =====================================================
 
 export default function App() {
-  const [page, setPage] =
-    useState<Page>("home");
-
-  const [
-    registrationId,
-    setRegistrationId,
-  ] = useState("");
-
+  const [page, setPage] = useState<Page>("home");
+  const [language, setLanguage] = useState<FormLanguage>("ta");
+  const [registrationId, setRegistrationId] = useState("");
   const [formKey, setFormKey] = useState(0);
 
   function navigate(nextPage: Page) {
-    if (
-      nextPage === "register" &&
-      page !== "register"
-    ) {
-      setFormKey(
-        (current) => current + 1
-      );
+    if (nextPage === "register" && page !== "register") {
+      setLanguage("ta");
+      setFormKey((current) => current + 1);
     }
-
     setPage(nextPage);
   }
 
@@ -1916,43 +1682,31 @@ export default function App() {
     <div className="app-shell">
       <main
         className={`app-main ${
-          page === "register"
-            ? "registration-main-scroll"
-            : ""
+          page === "register" ? "registration-main-scroll" : ""
         }`}
       >
         {page === "home" && (
-          <HomePage
-            onRegister={() =>
-              navigate("register")
-            }
-          />
+          <HomePage onRegister={() => navigate("register")} />
         )}
 
-        {page === "about" && (
-          <AboutPage />
-        )}
-
-        {page === "contact" && (
-          <ContactPage />
-        )}
+        {page === "about" && <AboutPage />}
+        {page === "contact" && <ContactPage />}
 
         {page === "register" && (
           <RegistrationPage
             key={formKey}
+            language={language}
+            onLanguageChange={setLanguage}
             onSuccess={handleSuccess}
-            onBackHome={() =>
-              navigate("home")
-            }
+            onBackHome={() => navigate("home")}
           />
         )}
 
         {page === "success" && (
           <SuccessPage
             id={registrationId}
-            onHome={() =>
-              navigate("home")
-            }
+            language={language}
+            onHome={() => navigate("home")}
           />
         )}
       </main>

@@ -4428,3 +4428,100 @@ input[type="tel"] {
     width: 100%;
   }
 }
+
+/* ==========================================
+   BILINGUAL FORM LANGUAGE SWITCHER
+========================================== */
+
+.registration-language-bar {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 12px 0 18px;
+}
+
+.registration-language-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #223669;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.registration-language-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid #cbd5ee;
+  border-radius: 999px;
+  background: #eaf0ff;
+}
+
+.registration-language-switch button {
+  min-width: 85px;
+  padding: 9px 15px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #53638b;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.registration-language-switch button.active {
+  background: linear-gradient(135deg, #8756ff, #3520c3);
+  color: #ffffff;
+  box-shadow: 0 4px 13px rgba(87, 58, 198, 0.22);
+}
+
+.registration-language-switch button:focus-visible {
+  outline: 2px solid #5b42db;
+  outline-offset: 3px;
+}
+
+/* Bilingual text readability */
+.registration-screen[lang="ta"] .registration-card,
+.registration-screen[lang="ta"] .registration-progress,
+.registration-screen[lang="ta"] .registration-intro,
+.registration-screen[lang="ta"] .form-bottom-actions {
+  font-family:
+    "Noto Sans Tamil",
+    "DM Sans",
+    sans-serif;
+}
+
+/* Mobile language switch */
+@media (max-width: 700px) {
+  .registration-language-bar {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin: 14px 0;
+  }
+
+  .registration-language-label {
+    font-size: 11px;
+  }
+
+  .registration-language-switch {
+    padding: 3px;
+  }
+
+  .registration-language-switch button {
+    min-width: 72px;
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+}
