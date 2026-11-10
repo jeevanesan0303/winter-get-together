@@ -45,7 +45,7 @@ const EVENT = {
   date: "13.12.2026",
   time: "From 5:00 PM TO 10:00 PM",
   venue:
-    "Lennox Community Centre, Hayling Road, Croydon, Surrey, CR0 6UA",
+    "St Boniface Social Club, 185 Mitcham Road, London SW17 9PG",
   closing: "Nov 30, 2026",
   registrationClosesAt: "2026-11-30T23:59:00Z",
   phone: "00447890185111",

@@ -4344,3 +4344,87 @@ input[type="tel"] {
     display: none !important;
   }
 }
+
+/* =============================================
+   FINAL MOBILE HOME VERTICAL SPACING
+   KEEP ALL EXISTING ELEMENT SIZES
+============================================= */
+
+@media (max-width: 700px) {
+
+  /* Preserve full mobile screen layout */
+  .home-screen .home-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+
+    /* Distribute remaining space naturally */
+    justify-content: space-between !important;
+
+    width: 95% !important;
+    height: 100% !important;
+
+    padding-top: 12px !important;
+    padding-bottom: 46px !important;
+
+    gap: 0 !important;
+  }
+
+  /* Keep logos, title and subtitle together */
+  .home-screen .hero-top {
+    order: 1;
+    width: 100%;
+    flex: 0 0 auto !important;
+  }
+
+  /* Event details + Register Now */
+  .home-screen .hero-bottom {
+    order: 2;
+    width: 100%;
+    flex: 0 0 auto !important;
+
+    /* Move lower using available space */
+    margin-top: auto !important;
+
+    gap: 20px !important;
+  }
+
+  /* Don't alter event card size */
+  .home-screen .event-info-bar {
+    flex-shrink: 0;
+  }
+
+  /* Slightly increase space after event details */
+  .home-screen .hero-register-button {
+    margin-top: 4px !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Countdown below Register Now */
+  .home-screen .home-countdown-placement {
+    order: 3;
+
+    width: 100%;
+    flex: 0 0 auto !important;
+
+    margin-top: 26px !important;
+    margin-bottom: 0 !important;
+
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  /* Keep existing countdown dimensions */
+  .home-screen .home-countdown-placement .event-countdown {
+    margin: 0 !important;
+  }
+
+  /* Preserve snowy bottom wave */
+  .home-screen .winter-wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+  }
+}
