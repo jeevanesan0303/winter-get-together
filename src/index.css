@@ -4720,3 +4720,44 @@ input[type="tel"] {
     animation: none;
   }
 }
+
+/* ==========================================
+   GENDER DROPDOWN ARROW
+========================================== */
+
+.registration-screen .select-control {
+  position: relative;
+  width: 100%;
+}
+
+.registration-screen .select-control select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  padding-right: 42px !important;
+}
+
+/* Custom arrow */
+.registration-screen .select-control::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+  top: 50%;
+
+  width: 8px;
+  height: 8px;
+
+  border-right: 2px solid #344a83;
+  border-bottom: 2px solid #344a83;
+
+  transform: translateY(-70%) rotate(45deg);
+
+  pointer-events: none;
+  transition: border-color 0.2s ease;
+}
+
+.registration-screen .select-control:focus-within::after {
+  border-color: #6541e7;
+}
