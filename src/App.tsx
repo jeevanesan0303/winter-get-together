@@ -1,23 +1,40 @@
 
 import {
   useEffect,
-  useRef,
   useState,
   type ChangeEvent,
   type CSSProperties,
   type FormEvent,
   type ReactNode,
 } from "react";
+
 import {
-  ArrowLeft, ArrowRight, CalendarDays, Check, CheckCircle2,
-  Clock3, Copy, FileCheck2, GraduationCap, Home, Hourglass,
-  Mail, MapPin, Phone, ShieldCheck, Snowflake, Sparkles,
-  UploadCloud, UserRound, UsersRound,
+  ArrowLeft,
+  ArrowRight,
+  CalendarDays,
+  Check,
+  CheckCircle2,
+  Clock3,
+  Copy,
+  FileCheck2,
+  GraduationCap,
+  Home,
+  Hourglass,
+  Mail,
+  MapPin,
+  Phone,
+  ShieldCheck,
+  Snowflake,
+  Sparkles,
+  UploadCloud,
+  UserRound,
+  UsersRound,
 } from "lucide-react";
+
 import "./index.css";
 
 // =====================================================
-// EVENT CONFIGURATION
+// EVENT DETAILS
 // =====================================================
 
 const EVENT = {
@@ -30,7 +47,6 @@ const EVENT = {
   venue:
     "Lennox Community Centre, Hayling Road, Croydon, Surrey, CR0 6UA",
   closing: "Nov 30, 2026",
-  // November 30, 2026 at 11:59 PM UK time (GMT)
   registrationClosesAt: "2026-11-30T23:59:00Z",
   phone: "00447890185111",
   email: "",
@@ -46,7 +62,17 @@ const STORAGE_KEY = "winter_event_registrations_v2";
 const MAX_FILE_SIZE_MB = 20;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
-type Page = "home" | "about" | "contact" | "register" | "success";
+// =====================================================
+// TYPES
+// =====================================================
+
+type Page =
+  | "home"
+  | "about"
+  | "contact"
+  | "register"
+  | "success";
+
 type Step = 1 | 2 | 3;
 type Country = "UK" | "LK";
 
@@ -79,6 +105,10 @@ type SavedRegistration = {
   answers: Answers;
   documents: Record<string, string | null>;
 };
+
+// =====================================================
+// PHONE CONFIGURATION
+// =====================================================
 
 const COUNTRY_OPTIONS = {
   UK: {
@@ -132,7 +162,10 @@ const QUESTIONS: QuestionDefinition[] = [
     id: "grammar_school",
     question:
       "Grammar School தேர்வில் தேர்ச்சி பெற்றுள்ளீர்களா?",
-    options: ["தேர்ச்சி பெற்றுள்ளேன்", "தேர்ச்சி பெறவில்லை"],
+    options: [
+      "தேர்ச்சி பெற்றுள்ளேன்",
+      "தேர்ச்சி பெறவில்லை",
+    ],
     positiveOptions: ["தேர்ச்சி பெற்றுள்ளேன்"],
     uploadLabel: "Upload Grammar School Result Proof",
   },
@@ -154,7 +187,8 @@ const QUESTIONS: QuestionDefinition[] = [
   },
   {
     id: "university_degree",
-    question: "பல்கலைக்கழகத்தில் பட்டம் பெற்றுள்ளீர்களா?",
+    question:
+      "பல்கலைக்கழகத்தில் பட்டம் பெற்றுள்ளீர்களா?",
     options: ["ஆம்", "இல்லை"],
     positiveOptions: ["ஆம்"],
     uploadLabel: "Upload University Degree Certificate",
@@ -169,23 +203,35 @@ const QUESTIONS: QuestionDefinition[] = [
   },
 ];
 
+// =====================================================
+// HELPERS
+// =====================================================
+
 function initialAnswers(): Answers {
-  return Object.fromEntries(QUESTIONS.map((q) => [q.id, ""]));
+  return Object.fromEntries(
+    QUESTIONS.map((question) => [question.id, ""])
+  );
 }
 
 function initialProofFiles(): ProofFiles {
-  return Object.fromEntries(QUESTIONS.map((q) => [q.id, null]));
+  return Object.fromEntries(
+    QUESTIONS.map((question) => [question.id, null])
+  );
 }
 
-function needsProof(q: QuestionDefinition, answer: string): boolean {
-  return q.positiveOptions.includes(answer);
+function needsProof(
+  question: QuestionDefinition,
+  answer: string
+): boolean {
+  return question.positiveOptions.includes(answer);
 }
 
 function todayLocal(): string {
   const now = new Date();
-  return new Date(
+  const adjusted = new Date(
     now.getTime() - now.getTimezoneOffset() * 60000
-  ).toISOString().slice(0, 10);
+  );
+  return adjusted.toISOString().slice(0, 10);
 }
 
 function isValidDateOfBirth(value: string): boolean {
@@ -203,18 +249,24 @@ function isValidDateOfBirth(value: string): boolean {
 }
 
 function getNationalPhone(
-  fullPhone: string,
+  phone: string,
   country: Country
 ): string {
   const code = COUNTRY_OPTIONS[country].code;
-  return fullPhone.startsWith(code)
-    ? fullPhone.slice(code.length)
+  return phone.startsWith(code)
+    ? phone.slice(code.length)
     : "";
 }
 
-function isValidPhone(personal: PersonalInformation): boolean {
+function isValidPhone(
+  personal: PersonalInformation
+): boolean {
   const config = COUNTRY_OPTIONS[personal.country];
-  const national = getNationalPhone(personal.phone, personal.country);
+  const national = getNationalPhone(
+    personal.phone,
+    personal.country
+  );
+
   return (
     national.length === config.length &&
     /^\d+$/.test(national)
@@ -222,16 +274,18 @@ function isValidPhone(personal: PersonalInformation): boolean {
 }
 
 function isValidProofFile(file: File): boolean {
-  const extension = /\.(pdf|jpe?g|png)$/i.test(file.name);
-  const mime = [
+  const validExtension =
+    /\.(pdf|jpe?g|png)$/i.test(file.name);
+
+  const validType = [
     "application/pdf",
     "image/jpeg",
     "image/png",
   ].includes(file.type);
 
   return (
-    extension &&
-    mime &&
+    validExtension &&
+    validType &&
     file.size > 0 &&
     file.size <= MAX_FILE_SIZE_BYTES
   );
@@ -239,15 +293,19 @@ function isValidProofFile(file: File): boolean {
 
 function generateId(): string {
   const random =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
+    typeof crypto !== "undefined" &&
+    "randomUUID" in crypto
       ? crypto.randomUUID().slice(0, 8).toUpperCase()
-      : Math.random().toString(36).slice(2, 10).toUpperCase();
+      : Math.random()
+          .toString(36)
+          .slice(2, 10)
+          .toUpperCase();
 
   return `REG-${new Date().getFullYear()}-${random}`;
 }
 
 // =====================================================
-// REGISTRATION CLOSING COUNTDOWN
+// LIVE REGISTRATION COUNTDOWN
 // =====================================================
 
 function getCountdown() {
@@ -255,6 +313,7 @@ function getCountdown() {
     0,
     Date.parse(EVENT.registrationClosesAt) - Date.now()
   );
+
   return {
     remaining,
     days: Math.floor(remaining / 86400000),
@@ -268,78 +327,92 @@ function RegistrationCountdown() {
   const [time, setTime] = useState(getCountdown);
 
   useEffect(() => {
-    const interval = window.setInterval(
-      () => setTime(getCountdown()),
-      1000
-    );
+    const interval = window.setInterval(() => {
+      setTime(getCountdown());
+    }, 1000);
+
     return () => window.clearInterval(interval);
   }, []);
 
+  if (time.remaining === 0) {
+    return (
+      <div className="event-countdown">
+        <h3>Registration Has Closed</h3>
+      </div>
+    );
+  }
+
+  const units = [
+    { label: "DAYS", value: time.days },
+    { label: "HOURS", value: time.hours },
+    { label: "MINS", value: time.minutes },
+    { label: "SECS", value: time.seconds },
+  ];
+
   return (
     <div className="event-countdown" aria-live="off">
-      {time.remaining === 0 ? (
-        <h3>Registration Has Closed</h3>
-      ) : (
-        <>
-          <p className="countdown-heading">
-            REGISTRATION ENDS IN
-          </p>
-          <div className="countdown-grid">
-            {[
-              { label: "DAYS", value: time.days },
-              { label: "HOURS", value: time.hours },
-              { label: "MINS", value: time.minutes },
-              { label: "SECS", value: time.seconds },
-            ].map((item) => (
-              <div className="countdown-box" key={item.label}>
-                <strong>
-                  {String(item.value).padStart(2, "0")}
-                </strong>
-                <span>{item.label}</span>
-              </div>
-            ))}
+      <p className="countdown-heading">
+        REGISTRATION ENDS IN
+      </p>
+
+      <div className="countdown-grid">
+        {units.map((unit) => (
+          <div className="countdown-box" key={unit.label}>
+            <strong>
+              {String(unit.value).padStart(2, "0")}
+            </strong>
+            <span>{unit.label}</span>
           </div>
-        </>
-      )}
+        ))}
+      </div>
     </div>
   );
 }
 
 // =====================================================
-// SNOWFALL AND DECORATIONS
+// FALLING SNOW
 // =====================================================
 
-const SNOW_PARTICLES = Array.from({ length: 75 }, (_, i) => ({
-  id: i,
-  left: (i * 47.37 + 13) % 100,
-  size: 2 + ((i * 7) % 7),
-  duration: 9 + ((i * 11) % 15),
-  delay: -((i * 13.71) % 24),
-  opacity: 0.22 + ((i * 3) % 7) / 12,
-  drift: -35 + ((i * 17) % 95),
-  blur: i % 7 === 0 ? 1.3 : 0,
-}));
+const SNOW_PARTICLES = Array.from(
+  { length: 75 },
+  (_, index) => ({
+    id: index,
+    left: (index * 47.37 + 13) % 100,
+    size: 2 + ((index * 7) % 7),
+    duration: 9 + ((index * 11) % 15),
+    delay: -((index * 13.71) % 24),
+    opacity: 0.22 + ((index * 3) % 7) / 12,
+    drift: -35 + ((index * 17) % 95),
+    blur: index % 7 === 0 ? 1.3 : 0,
+  })
+);
 
-function FallingSnow({ count = 75 }: { count?: number }) {
+function FallingSnow({
+  count = 75,
+}: {
+  count?: number;
+}) {
   return (
     <div className="falling-snow" aria-hidden="true">
-      {SNOW_PARTICLES.slice(0, count).map((particle) => (
-        <span
-          key={particle.id}
-          className="falling-snow-particle"
-          style={
-            {
-              "--snow-left": `${particle.left}%`,
-              "--snow-size": `${particle.size}px`,
-              "--snow-duration": `${particle.duration}s`,
-              "--snow-delay": `${particle.delay}s`,
-              "--snow-opacity": particle.opacity,
-              "--snow-drift": `${particle.drift}px`,
-              "--snow-blur": `${particle.blur}px`,
-            } as CSSProperties
-          }
-        />
-      ))}
+      {SNOW_PARTICLES.slice(0, count).map((particle) => {
+        const style = {
+          "--snow-left": `${particle.left}%`,
+          "--snow-size": `${particle.size}px`,
+          "--snow-duration": `${particle.duration}s`,
+          "--snow-delay": `${particle.delay}s`,
+          "--snow-opacity": particle.opacity,
+          "--snow-drift": `${particle.drift}px`,
+          "--snow-blur": `${particle.blur}px`,
+        } as CSSProperties;
+
+        return (
+          <span
+            key={particle.id}
+            className="falling-snow-particle"
+            style={style}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -347,30 +420,47 @@ function FallingSnow({ count = 75 }: { count?: number }) {
 function SnowDecorations() {
   return (
     <div className="snow-layer" aria-hidden="true">
-      {[1, 2, 3, 4, 5, 6].map((i) => (
-        <Snowflake key={i} className={`snowflake snow-${i}`} />
+      {[1, 2, 3, 4, 5, 6].map((number) => (
+        <Snowflake
+          key={number}
+          className={`snowflake snow-${number}`}
+        />
       ))}
     </div>
   );
 }
 
-function WinterBackground({ light = false }: { light?: boolean }) {
+function WinterBackground({
+  light = false,
+}: {
+  light?: boolean;
+}) {
   return (
     <>
       <div
         className="winter-background"
-        style={{ backgroundImage: `url("${IMAGES.background}")` }}
+        style={{
+          backgroundImage: `url("${IMAGES.background}")`,
+        }}
       />
+
       <div
         className={
-          light ? "success-background-overlay" : "winter-overlay"
+          light
+            ? "success-background-overlay"
+            : "winter-overlay"
         }
       />
+
       <SnowDecorations />
       <FallingSnow count={light ? 45 : 75} />
     </>
   );
 }
+
+// =====================================================
+// WINTER WAVE
+// =====================================================
 
 function WinterWave() {
   return (
@@ -384,14 +474,17 @@ function WinterWave() {
         fill="#a3c8ff"
         d="M0 22C240 10 400 110 760 94c300-13 460-90 840-49v95H0Z"
       />
+
       <path
         fill="#ffffff"
         d="M0 48C265 22 421 131 790 111c306-16 506-93 810-43v72H0Z"
       />
+
       <path
         fill="#1769d8"
         d="M0 94c285-52 457 49 799 23 341-26 555-38 801-20v43H0Z"
       />
+
       <path
         fill="#e9f4ff"
         d="M0 109c307-33 513 51 827 24 305-26 548-45 773-14v21H0Z"
@@ -401,7 +494,7 @@ function WinterWave() {
 }
 
 // =====================================================
-// HOME PAGE — KEEP EXISTING DESIGN
+// ORGANIZATION LOGOS
 // =====================================================
 
 function OrganizationLogos() {
@@ -415,7 +508,9 @@ function OrganizationLogos() {
           draggable={false}
         />
       </div>
+
       <div className="logo-vertical-divider" />
+
       <div className="logo-frame animated-logo">
         <img
           src={IMAGES.logo2}
@@ -427,6 +522,10 @@ function OrganizationLogos() {
     </div>
   );
 }
+
+// =====================================================
+// EVENT INFORMATION CARD
+// =====================================================
 
 function EventInfoCard({
   icon,
@@ -442,9 +541,12 @@ function EventInfoCard({
   return (
     <div className="event-info-item">
       <div className="event-info-icon">{icon}</div>
+
       <div className="event-info-text">
         <span>{title}</span>
-        <strong className={highlight ? "highlight-value" : ""}>
+        <strong
+          className={highlight ? "highlight-value" : ""}
+        >
           {value}
         </strong>
       </div>
@@ -452,22 +554,39 @@ function EventInfoCard({
   );
 }
 
-function HomePage({ onRegister }: { onRegister: () => void }) {
+// =====================================================
+// HOME PAGE
+// SINGLE COUNTDOWN, RESPONSIVE POSITION
+// =====================================================
+
+function HomePage({
+  onRegister,
+}: {
+  onRegister: () => void;
+}) {
   return (
     <section className="winter-screen home-screen">
       <WinterBackground />
 
       <div className="home-layout">
+        {/* TOP: LOGOS, ENGLISH/TAMIL TITLE, SUBTITLE */}
         <div className="hero-top">
           <OrganizationLogos />
+
           <div className="organization-headings">
             <h2>{EVENT.organizer1}</h2>
             <h2>{EVENT.organizer2}</h2>
           </div>
 
           <div className="hero-heading-group">
-            <h1 className="hero-main-title">{EVENT.title}</h1>
-            <h3 className="hero-tamil-title" lang="ta">
+            <h1 className="hero-main-title">
+              {EVENT.title}
+            </h1>
+
+            <h3
+              className="hero-tamil-title"
+              lang="ta"
+            >
               {EVENT.tamil}
             </h3>
 
@@ -480,14 +599,20 @@ function HomePage({ onRegister }: { onRegister: () => void }) {
             </div>
 
             <p className="hero-subtitle">
-              Let&apos;s come together to celebrate our community and culture
+              Let&apos;s come together to celebrate our
+              community and culture
             </p>
-            <div className="desktop-registration-countdown">
-  <RegistrationCountdown />
-</div>
           </div>
         </div>
 
+        {/* ONE COUNTDOWN:
+            DESKTOP: BETWEEN TITLE AND EVENT INFO
+            MOBILE: BELOW REGISTER BUTTON VIA CSS */}
+        <div className="home-countdown-placement">
+          <RegistrationCountdown />
+        </div>
+
+        {/* BOTTOM: EVENT INFO AND REGISTER BUTTON */}
         <div className="hero-bottom">
           <div className="event-info-bar">
             <EventInfoCard
@@ -495,16 +620,19 @@ function HomePage({ onRegister }: { onRegister: () => void }) {
               title="Event Date"
               value={EVENT.date}
             />
+
             <EventInfoCard
               icon={<Clock3 />}
               title="Event Time"
               value={EVENT.time}
             />
+
             <EventInfoCard
               icon={<MapPin />}
               title="Event Venue"
               value={EVENT.venue}
             />
+
             <EventInfoCard
               icon={<Hourglass />}
               title="Registration Closes"
@@ -521,8 +649,6 @@ function HomePage({ onRegister }: { onRegister: () => void }) {
             <span>Register Now</span>
             <ArrowRight size={25} />
           </button>
-
-          <RegistrationCountdown />
         </div>
       </div>
 
@@ -532,84 +658,118 @@ function HomePage({ onRegister }: { onRegister: () => void }) {
 }
 
 // =====================================================
-// ABOUT / CONTACT — PRESERVED
+// ABOUT PAGE
 // =====================================================
 
 function AboutPage() {
   return (
     <section className="winter-screen secondary-screen">
       <WinterBackground />
+
       <div className="info-page-content">
         <span className="section-kicker">
-          <Sparkles size={15} /> OUR COMMUNITY EVENT
+          <Sparkles size={15} />
+          OUR COMMUNITY EVENT
         </span>
+
         <h1>About Winter Get Together</h1>
         <h2 lang="ta">{EVENT.tamil}</h2>
+
         <div className="information-glass-card">
           <UsersRound size={38} />
+
           <h3>Celebrating Community & Culture</h3>
+
           <p>
-            Winter Get Together brings families, friends and
-            members of our community together for a special
-            celebration of connection, friendship and culture.
+            Winter Get Together brings families, friends
+            and members of our community together for a
+            special celebration of connection, friendship
+            and culture.
           </p>
+
           <div className="about-organizers">
             <span>{EVENT.organizer1}</span>
             <span>{EVENT.organizer2}</span>
           </div>
         </div>
       </div>
+
       <WinterWave />
     </section>
   );
 }
+
+// =====================================================
+// CONTACT PAGE
+// =====================================================
 
 function ContactPage() {
   return (
     <section className="winter-screen secondary-screen">
       <WinterBackground />
+
       <div className="info-page-content">
-        <span className="section-kicker">GET IN TOUCH</span>
+        <span className="section-kicker">
+          GET IN TOUCH
+        </span>
+
         <h1>Contact Us</h1>
         <h2 lang="ta">{EVENT.tamil}</h2>
+
         <div className="information-glass-card">
           <Mail size={38} />
+
           <h3>Event Enquiries</h3>
+
           <p>
-            For event and registration enquiries, please
-            contact the organizing associations.
+            For event and registration enquiries,
+            please contact the organizing associations.
           </p>
+
           <div className="contact-items">
             {EVENT.email && (
               <a href={`mailto:${EVENT.email}`}>
-                <Mail size={19} /> {EVENT.email}
+                <Mail size={19} />
+                {EVENT.email}
               </a>
             )}
+
             {EVENT.phone && (
               <a href={`tel:${EVENT.phone}`}>
-                <Phone size={19} /> {EVENT.phone}
+                <Phone size={19} />
+                {EVENT.phone}
               </a>
             )}
           </div>
         </div>
       </div>
+
       <WinterWave />
     </section>
   );
 }
 
 // =====================================================
-// REGISTRATION COMPONENTS
+// REGISTRATION PROGRESS
 // =====================================================
 
-function StepProgress({ step }: { step: Step }) {
-  const steps = ["Personal Info", "Achievements", "Review"];
+function StepProgress({
+  step,
+}: {
+  step: Step;
+}) {
+  const steps = [
+    "Personal Info",
+    "Achievements",
+    "Review",
+  ];
 
   return (
     <div className="registration-progress">
       {steps.map((label, index) => {
         const number = index + 1;
         const completed = number < step;
+
         return (
           <div className="progress-group" key={number}>
             <div
@@ -618,10 +778,16 @@ function StepProgress({ step }: { step: Step }) {
               } ${completed ? "completed" : ""}`}
             >
               <div className="progress-circle">
-                {completed ? <Check size={16} /> : number}
+                {completed ? (
+                  <Check size={16} />
+                ) : (
+                  number
+                )}
               </div>
+
               <span>{label}</span>
             </div>
+
             {index < 2 && (
               <div
                 className={`progress-line ${
@@ -636,6 +802,10 @@ function StepProgress({ step }: { step: Step }) {
   );
 }
 
+// =====================================================
+// REUSABLE FORM FIELD
+// =====================================================
+
 function FormField({
   label,
   required = false,
@@ -649,8 +819,11 @@ function FormField({
     <div className="form-field">
       <label>
         {label}
-        {required && <span className="required"> *</span>}
+        {required && (
+          <span className="required"> *</span>
+        )}
       </label>
+
       {children}
     </div>
   );
@@ -671,41 +844,51 @@ function ReviewItem({
   );
 }
 
+// =====================================================
+// OPTIONAL ACHIEVEMENT QUESTION
+// =====================================================
+
 function AchievementQuestion({
   number,
   question,
   answer,
   proof,
   onAnswer,
-  onFileChange,
   onClear,
+  onFileChange,
 }: {
   number: number;
   question: QuestionDefinition;
   answer: string;
   proof: File | null;
   onAnswer: (option: string) => void;
-  onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onClear: () => void;
+  onFileChange: (
+    event: ChangeEvent<HTMLInputElement>
+  ) => void;
 }) {
-  const uploadRequired = needsProof(question, answer);
+  const proofRequired = needsProof(question, answer);
 
   return (
     <div className="achievement-question">
       <div className="achievement-question-title">
-        <span className="achievement-number">{number}</span>
+        <span className="achievement-number">
+          {number}
+        </span>
+
         <h4 lang="ta">{question.question}</h4>
       </div>
 
       <div className="achievement-options">
         {question.options.map((option) => {
           const checked = answer === option;
+
           return (
             <label
+              key={option}
               className={`achievement-option ${
                 checked ? "is-selected" : ""
               }`}
-              key={option}
             >
               <input
                 type="radio"
@@ -714,7 +897,9 @@ function AchievementQuestion({
                 checked={checked}
                 onChange={() => onAnswer(option)}
               />
+
               <span>{option}</span>
+
               {checked && (
                 <Check
                   size={16}
@@ -724,10 +909,11 @@ function AchievementQuestion({
             </label>
           );
         })}
+
         {answer && (
           <button
-            className="achievement-clear-button"
             type="button"
+            className="achievement-clear-button"
             onClick={onClear}
           >
             Clear
@@ -735,10 +921,11 @@ function AchievementQuestion({
         )}
       </div>
 
-      {uploadRequired && (
+      {proofRequired && (
         <div className="achievement-proof">
           <div className="achievement-proof-heading">
             <FileCheck2 size={18} />
+
             <span>
               {question.uploadLabel}
               <span className="required"> *</span>
@@ -746,18 +933,28 @@ function AchievementQuestion({
           </div>
 
           <label className="file-upload">
-            {proof ? <FileCheck2 /> : <UploadCloud />}
+            {proof ? (
+              <FileCheck2 />
+            ) : (
+              <UploadCloud />
+            )}
+
             <span>
-              {proof?.name || "Click to upload supporting proof"}
+              {proof?.name ||
+                "Click to upload supporting proof"}
             </span>
+
             <small>
-              PDF, JPG or PNG — Maximum {MAX_FILE_SIZE_MB} MB
+              PDF, JPG or PNG — Maximum{" "}
+              {MAX_FILE_SIZE_MB} MB
             </small>
+
             {proof && (
               <small>
-                {(proof.size / (1024 * 1024)).toFixed(2)} MB
+                {(proof.size / 1048576).toFixed(2)} MB
               </small>
             )}
+
             <input
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
@@ -782,21 +979,36 @@ function RegistrationPage({
   onBackHome: () => void;
 }) {
   const [step, setStep] = useState<Step>(1);
-  const [personal, setPersonal] = useState<PersonalInformation>(
-    () => ({ ...EMPTY_PERSONAL })
-  );
-  const [answers, setAnswers] = useState<Answers>(initialAnswers);
+
+  const [personal, setPersonal] =
+    useState<PersonalInformation>(
+      () => ({ ...EMPTY_PERSONAL })
+    );
+
+  const [answers, setAnswers] =
+    useState<Answers>(initialAnswers);
+
   const [proofFiles, setProofFiles] =
     useState<ProofFiles>(initialProofFiles);
+
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
 
-  function updatePersonal<K extends keyof PersonalInformation>(
+  // ---------------------------------------------------
+  // PERSONAL DETAILS
+  // ---------------------------------------------------
+
+  function updatePersonal<
+    K extends keyof PersonalInformation
+  >(
     key: K,
     value: PersonalInformation[K]
   ) {
-    setPersonal((current) => ({ ...current, [key]: value }));
+    setPersonal((current) => ({
+      ...current,
+      [key]: value,
+    }));
+
     setError("");
   }
 
@@ -806,15 +1018,21 @@ function RegistrationPage({
       country,
       phone: "",
     }));
+
     setError("");
   }
 
-  function changePhone(event: ChangeEvent<HTMLInputElement>) {
+  function changePhone(
+    event: ChangeEvent<HTMLInputElement>
+  ) {
     const config = COUNTRY_OPTIONS[personal.country];
+
     let digits = event.target.value.replace(/\D/g, "");
 
-    // Sri Lankan local numbers may be pasted with a leading zero.
-    if (personal.country === "LK" && digits.startsWith("0")) {
+    if (
+      personal.country === "LK" &&
+      digits.startsWith("0")
+    ) {
       digits = digits.slice(1);
     }
 
@@ -822,20 +1040,32 @@ function RegistrationPage({
 
     setPersonal((current) => ({
       ...current,
-      phone: digits ? `${config.code}${digits}` : "",
+      phone: digits
+        ? `${config.code}${digits}`
+        : "",
     }));
+
     setError("");
   }
 
-  function updateAnswer(question: QuestionDefinition, option: string) {
+  // ---------------------------------------------------
+  // ACHIEVEMENT ANSWERS
+  // ---------------------------------------------------
+
+  function updateAnswer(
+    question: QuestionDefinition,
+    option: string
+  ) {
     setAnswers((current) => ({
       ...current,
       [question.id]: option,
     }));
+
     setProofFiles((current) => ({
       ...current,
       [question.id]: null,
     }));
+
     setError("");
   }
 
@@ -844,31 +1074,51 @@ function RegistrationPage({
       ...current,
       [questionId]: "",
     }));
+
     setProofFiles((current) => ({
       ...current,
       [questionId]: null,
     }));
+
     setError("");
   }
+
+  // ---------------------------------------------------
+  // FILE UPLOAD VALIDATION — 20 MB
+  // ---------------------------------------------------
 
   function handleProof(
     questionId: string,
     event: ChangeEvent<HTMLInputElement>
   ) {
     const file = event.target.files?.[0] || null;
+
     if (!file) return;
 
-    if (!/\.(pdf|jpe?g|png)$/i.test(file.name) ||
-        !["application/pdf", "image/jpeg", "image/png"].includes(file.type)) {
-      setError("Only PDF, JPG and PNG files are allowed.");
+    if (
+      !/\.(pdf|jpe?g|png)$/i.test(file.name) ||
+      ![
+        "application/pdf",
+        "image/jpeg",
+        "image/png",
+      ].includes(file.type)
+    ) {
+      setError(
+        "Only PDF, JPG and PNG files are allowed."
+      );
+
       event.target.value = "";
       return;
     }
 
-    if (file.size === 0 || file.size > MAX_FILE_SIZE_BYTES) {
+    if (
+      file.size === 0 ||
+      file.size > MAX_FILE_SIZE_BYTES
+    ) {
       setError(
         `Please select a non-empty file up to ${MAX_FILE_SIZE_MB} MB.`
       );
+
       event.target.value = "";
       return;
     }
@@ -877,67 +1127,113 @@ function RegistrationPage({
       ...current,
       [questionId]: file,
     }));
+
     setError("");
   }
+
+  // ---------------------------------------------------
+  // VALIDATION
+  // ---------------------------------------------------
 
   function validatePersonal(): string {
     if (personal.fullName.trim().length < 3) {
       return "Please enter your full name.";
     }
+
     if (!isValidDateOfBirth(personal.dob)) {
-      return "Date of birth must be a valid date, not in the future.";
+      return (
+        "Date of birth must be a valid date, " +
+        "not in the future."
+      );
     }
-    if (personal.gender !== "Male" &&
-        personal.gender !== "Female") {
+
+    if (
+      personal.gender !== "Male" &&
+      personal.gender !== "Female"
+    ) {
       return "Please select your gender.";
     }
+
     if (!isValidPhone(personal)) {
-      const config = COUNTRY_OPTIONS[personal.country];
-      return `Please enter exactly ${config.length} digits after ${config.code}.`;
+      const config =
+        COUNTRY_OPTIONS[personal.country];
+
+      return (
+        `Please enter exactly ${config.length} ` +
+        `digits after ${config.code}.`
+      );
     }
+
     if (personal.address.trim().length < 8) {
       return "Please enter your full address.";
     }
+
     return "";
   }
 
   function validateAchievements(): string {
-    // Every question is optional. Proof is required
-    // only when the user selects an achievement.
-    for (let index = 0; index < QUESTIONS.length; index++) {
+    for (
+      let index = 0;
+      index < QUESTIONS.length;
+      index++
+    ) {
       const question = QUESTIONS[index];
       const answer = answers[question.id] || "";
 
+      // All questions can be skipped.
       if (!answer) continue;
 
       if (!question.options.includes(answer)) {
-        return `Invalid answer for question ${index + 1}.`;
+        return (
+          `Invalid answer for question ${index + 1}.`
+        );
       }
 
       if (needsProof(question, answer)) {
-        const proof = proofFiles[question.id];
-        if (!proof) {
-          return `Upload supporting proof for question ${index + 1}, or clear the answer.`;
+        const file = proofFiles[question.id];
+
+        if (!file) {
+          return (
+            `Upload supporting proof for question ` +
+            `${index + 1}, or clear the answer.`
+          );
         }
-        if (!isValidProofFile(proof)) {
-          return `Question ${index + 1}: File must be PDF, JPG or PNG and no larger than ${MAX_FILE_SIZE_MB} MB.`;
+
+        if (!isValidProofFile(file)) {
+          return (
+            `Question ${index + 1}: File must be ` +
+            `PDF, JPG or PNG and no larger than ` +
+            `${MAX_FILE_SIZE_MB} MB.`
+          );
         }
       }
     }
+
     return "";
   }
 
+  // ---------------------------------------------------
+  // NAVIGATE BETWEEN STEPS
+  // ---------------------------------------------------
+
   function scrollToTop() {
-    const parent = document.querySelector(".registration-main-scroll");
-    if (parent instanceof HTMLElement) {
-      parent.scrollTo({ top: 0, behavior: "instant" });
+    const container = document.querySelector(
+      ".registration-main-scroll"
+    );
+
+    if (container instanceof HTMLElement) {
+      container.scrollTo({
+        top: 0,
+        behavior: "instant",
+      });
     }
   }
 
   function nextStep() {
-    const problem = step === 1
-      ? validatePersonal()
-      : validateAchievements();
+    const problem =
+      step === 1
+        ? validatePersonal()
+        : validateAchievements();
 
     if (problem) {
       setError(problem);
@@ -945,50 +1241,81 @@ function RegistrationPage({
     }
 
     setError("");
-    setStep((current) => Math.min(3, current + 1) as Step);
+
+    setStep(
+      (current) => Math.min(3, current + 1) as Step
+    );
+
     scrollToTop();
   }
 
   function previousStep() {
     setError("");
-    setStep((current) => Math.max(1, current - 1) as Step);
+
+    setStep(
+      (current) => Math.max(1, current - 1) as Step
+    );
+
     scrollToTop();
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  // ---------------------------------------------------
+  // SUBMIT REGISTRATION
+  // ---------------------------------------------------
+
+  function submit(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
-    const problem = validatePersonal() || validateAchievements();
+    const problem =
+      validatePersonal() || validateAchievements();
+
     if (problem) {
       setError(problem);
       return;
     }
 
     if (!personal.agreed) {
-      setError("Please confirm that your details are correct.");
+      setError(
+        "Please confirm that your details are correct."
+      );
       return;
     }
 
     if (submitting) return;
+
     setSubmitting(true);
     setError("");
 
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed: unknown = raw ? JSON.parse(raw) : [];
-      const saved: SavedRegistration[] = Array.isArray(parsed)
-        ? parsed
+      const raw =
+        localStorage.getItem(STORAGE_KEY);
+
+      const parsed: unknown = raw
+        ? JSON.parse(raw)
         : [];
 
-      const documents: Record<string, string | null> = {};
+      const saved: SavedRegistration[] =
+        Array.isArray(parsed) ? parsed : [];
+
+      const documents: Record<
+        string,
+        string | null
+      > = {};
+
       QUESTIONS.forEach((question) => {
-        const answer = answers[question.id] || "";
-        documents[question.id] = needsProof(question, answer)
-          ? proofFiles[question.id]?.name || null
-          : null;
+        const answer =
+          answers[question.id] || "";
+
+        documents[question.id] =
+          needsProof(question, answer)
+            ? proofFiles[question.id]?.name || null
+            : null;
       });
 
       const id = generateId();
+
       const registration: SavedRegistration = {
         id,
         createdAt: new Date().toISOString(),
@@ -1006,19 +1333,28 @@ function RegistrationPage({
         STORAGE_KEY,
         JSON.stringify([...saved, registration])
       );
+
       onSuccess(id);
     } catch {
-      setError("Unable to save registration. Please try again.");
+      setError(
+        "Unable to save registration. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
-  const country = COUNTRY_OPTIONS[personal.country];
+  const country =
+    COUNTRY_OPTIONS[personal.country];
+
   const nationalPhone = getNationalPhone(
     personal.phone,
     personal.country
   );
+
+  // ===================================================
+  // REGISTRATION UI
+  // ===================================================
 
   return (
     <section className="winter-screen registration-screen">
@@ -1029,21 +1365,32 @@ function RegistrationPage({
       <div className="registration-main">
         <div className="registration-intro">
           <h1>Winter Get Together</h1>
-          <h2 lang="ta">{EVENT.tamil}</h2>
+
+          <h2 lang="ta">
+            {EVENT.tamil}
+          </h2>
+
           <div className="registration-heading-line" />
+
           <h3>Event Registration</h3>
-          <p>Complete your details to join the event</p>
+
+          <p>
+            Complete your details to join the event
+          </p>
         </div>
 
         <StepProgress step={step} />
 
         <form
-          ref={formRef}
           className="registration-form"
           onSubmit={submit}
           noValidate
         >
           <div className="registration-card">
+            {/* ====================================
+                STEP 1 — PERSONAL INFORMATION
+            ==================================== */}
+
             {step === 1 && (
               <>
                 <div className="card-heading">
@@ -1052,64 +1399,98 @@ function RegistrationPage({
                 </div>
 
                 <div className="fields-grid">
-                  <FormField label="Full Name" required>
+                  <FormField
+                    label="Full Name"
+                    required
+                  >
                     <input
                       type="text"
                       autoComplete="name"
                       placeholder="Enter your full name"
                       value={personal.fullName}
-                      onChange={(e) =>
-                        updatePersonal("fullName", e.target.value)
+                      onChange={(event) =>
+                        updatePersonal(
+                          "fullName",
+                          event.target.value
+                        )
                       }
                     />
                   </FormField>
 
-                  <FormField label="Date of Birth" required>
+                  <FormField
+                    label="Date of Birth"
+                    required
+                  >
                     <input
                       type="date"
                       max={todayLocal()}
                       value={personal.dob}
-                      onChange={(e) =>
+                      onChange={(event) =>
                         updatePersonal(
                           "dob",
-                          e.target.value <= todayLocal()
-                            ? e.target.value
+                          event.target.value <= todayLocal()
+                            ? event.target.value
                             : ""
                         )
                       }
                     />
+
                     <small className="field-help">
                       Future dates are not allowed.
                     </small>
                   </FormField>
 
-                  <FormField label="Gender" required>
+                  <FormField
+                    label="Gender"
+                    required
+                  >
                     <div className="select-control">
                       <select
                         value={personal.gender}
-                        onChange={(e) =>
-                          updatePersonal("gender", e.target.value)
+                        onChange={(event) =>
+                          updatePersonal(
+                            "gender",
+                            event.target.value
+                          )
                         }
                       >
-                        <option value="">Select gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
+                        <option value="">
+                          Select gender
+                        </option>
+
+                        <option value="Male">
+                          Male
+                        </option>
+
+                        <option value="Female">
+                          Female
+                        </option>
                       </select>
                     </div>
                   </FormField>
 
-                  <FormField label="Contact Number" required>
+                  <FormField
+                    label="Contact Number"
+                    required
+                  >
                     <div className="international-phone-wrapper">
                       <select
                         className="phone-country-select"
                         value={personal.country}
-                        onChange={(e) =>
-                          changeCountry(e.target.value as Country)
+                        onChange={(event) =>
+                          changeCountry(
+                            event.target.value as Country
+                          )
                         }
                         aria-label="Select country code"
                       >
-                        <option value="UK">🇬🇧 +44</option>
-                        <option value="LK">🇱🇰 +94</option>
+                        <option value="UK">
+                          🇬🇧 +44
+                        </option>
+
+                        <option value="LK">
+                          🇱🇰 +94
+                        </option>
                       </select>
 
                       <input
@@ -1123,8 +1504,10 @@ function RegistrationPage({
                         aria-label={`${country.name} phone number`}
                       />
                     </div>
+
                     <small className="uk-phone-hint">
-                      Enter {country.length} digits after {country.code}.
+                      Enter {country.length} digits after{" "}
+                      {country.code}.
                       {personal.country === "LK"
                         ? " Do not include the leading 0."
                         : ""}
@@ -1132,14 +1515,20 @@ function RegistrationPage({
                   </FormField>
 
                   <div className="grid-full">
-                    <FormField label="Full Address" required>
+                    <FormField
+                      label="Full Address"
+                      required
+                    >
                       <textarea
                         rows={3}
                         autoComplete="street-address"
                         placeholder="House number, street, city, postcode, country"
                         value={personal.address}
-                        onChange={(e) =>
-                          updatePersonal("address", e.target.value)
+                        onChange={(event) =>
+                          updatePersonal(
+                            "address",
+                            event.target.value
+                          )
                         }
                       />
                     </FormField>
@@ -1148,11 +1537,18 @@ function RegistrationPage({
               </>
             )}
 
+            {/* ====================================
+                STEP 2 — ACHIEVEMENTS
+            ==================================== */}
+
             {step === 2 && (
               <>
                 <div className="card-heading">
                   <GraduationCap />
-                  <h3>Achievements & Qualifications</h3>
+
+                  <h3>
+                    Achievements & Qualifications
+                  </h3>
                 </div>
 
                 <p
@@ -1167,25 +1563,43 @@ function RegistrationPage({
                 </p>
 
                 <div className="achievement-question-list">
-                  {QUESTIONS.map((question, index) => (
-                    <AchievementQuestion
-                      key={question.id}
-                      number={index + 1}
-                      question={question}
-                      answer={answers[question.id] || ""}
-                      proof={proofFiles[question.id] || null}
-                      onAnswer={(option) =>
-                        updateAnswer(question, option)
-                      }
-                      onClear={() => clearAnswer(question.id)}
-                      onFileChange={(e) =>
-                        handleProof(question.id, e)
-                      }
-                    />
-                  ))}
+                  {QUESTIONS.map(
+                    (question, index) => (
+                      <AchievementQuestion
+                        key={question.id}
+                        number={index + 1}
+                        question={question}
+                        answer={
+                          answers[question.id] || ""
+                        }
+                        proof={
+                          proofFiles[question.id] || null
+                        }
+                        onAnswer={(option) =>
+                          updateAnswer(
+                            question,
+                            option
+                          )
+                        }
+                        onClear={() =>
+                          clearAnswer(question.id)
+                        }
+                        onFileChange={(event) =>
+                          handleProof(
+                            question.id,
+                            event
+                          )
+                        }
+                      />
+                    )
+                  )}
                 </div>
               </>
             )}
+
+            {/* ====================================
+                STEP 3 — REVIEW
+            ==================================== */}
 
             {step === 3 && (
               <>
@@ -1196,27 +1610,33 @@ function RegistrationPage({
 
                 <div className="review-section">
                   <h4>Personal Information</h4>
+
                   <div className="review-grid">
                     <ReviewItem
                       label="Full Name"
                       value={personal.fullName}
                     />
+
                     <ReviewItem
                       label="Date of Birth"
                       value={personal.dob}
                     />
+
                     <ReviewItem
                       label="Gender"
                       value={personal.gender}
                     />
+
                     <ReviewItem
                       label="Country"
                       value={country.name}
                     />
+
                     <ReviewItem
                       label="Contact Number"
                       value={personal.phone}
                     />
+
                     <ReviewItem
                       label="Full Address"
                       value={personal.address}
@@ -1225,38 +1645,64 @@ function RegistrationPage({
                 </div>
 
                 <div className="review-section">
-                  <h4>Achievements & Qualifications</h4>
+                  <h4>
+                    Achievements & Qualifications
+                  </h4>
+
                   <div className="achievement-review-list">
-                    {QUESTIONS.map((question, index) => {
-                      const answer = answers[question.id] || "";
-                      const file = proofFiles[question.id];
-                      return (
-                        <div
-                          key={question.id}
-                          className="achievement-review-item"
-                        >
-                          <p lang="ta">
-                            <strong>{index + 1}.</strong>{" "}
-                            {question.question}
-                          </p>
-                          <div className="achievement-review-answer">
-                            <span>Answer:</span>
-                            <strong>
-                              {answer || "Not selected"}
-                            </strong>
-                          </div>
-                          {needsProof(question, answer) && file && (
-                            <div className="achievement-review-proof">
-                              <FileCheck2 size={16} />
-                              <span>{file.name}</span>
-                              <small>
-                                ({(file.size / 1048576).toFixed(2)} MB)
-                              </small>
+                    {QUESTIONS.map(
+                      (question, index) => {
+                        const answer =
+                          answers[question.id] || "";
+
+                        const file =
+                          proofFiles[question.id];
+
+                        return (
+                          <div
+                            key={question.id}
+                            className="achievement-review-item"
+                          >
+                            <p lang="ta">
+                              <strong>
+                                {index + 1}.
+                              </strong>{" "}
+                              {question.question}
+                            </p>
+
+                            <div className="achievement-review-answer">
+                              <span>Answer:</span>
+
+                              <strong>
+                                {answer || "Not selected"}
+                              </strong>
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
+
+                            {needsProof(
+                              question,
+                              answer
+                            ) &&
+                              file && (
+                                <div className="achievement-review-proof">
+                                  <FileCheck2 size={16} />
+
+                                  <span>
+                                    {file.name}
+                                  </span>
+
+                                  <small>
+                                    (
+                                    {(
+                                      file.size / 1048576
+                                    ).toFixed(2)}
+                                    {" "}MB)
+                                  </small>
+                                </div>
+                              )}
+                          </div>
+                        );
+                      }
+                    )}
                   </div>
                 </div>
 
@@ -1264,22 +1710,34 @@ function RegistrationPage({
                   <input
                     type="checkbox"
                     checked={personal.agreed}
-                    onChange={(e) =>
-                      updatePersonal("agreed", e.target.checked)
+                    onChange={(event) =>
+                      updatePersonal(
+                        "agreed",
+                        event.target.checked
+                      )
                     }
                   />
-                  I confirm the information provided is correct
-                  and agree to its use for event registration.
+
+                  I confirm the information provided
+                  is correct and agree to its use
+                  for event registration.
                 </label>
               </>
             )}
 
             {error && (
-              <div className="form-error" role="alert">
+              <div
+                className="form-error"
+                role="alert"
+              >
                 {error}
               </div>
             )}
           </div>
+
+          {/* ====================================
+              FORM BUTTONS
+          ==================================== */}
 
           <div className="form-bottom-actions">
             {step > 1 ? (
@@ -1288,7 +1746,8 @@ function RegistrationPage({
                 className="back-button"
                 onClick={previousStep}
               >
-                <ArrowLeft size={17} /> Previous
+                <ArrowLeft size={17} />
+                Previous
               </button>
             ) : (
               <button
@@ -1296,7 +1755,8 @@ function RegistrationPage({
                 className="back-button"
                 onClick={onBackHome}
               >
-                <ArrowLeft size={17} /> Home
+                <ArrowLeft size={17} />
+                Home
               </button>
             )}
 
@@ -1306,7 +1766,8 @@ function RegistrationPage({
                 className="form-next-button"
                 onClick={nextStep}
               >
-                Next Step <ArrowRight size={17} />
+                Next Step
+                <ArrowRight size={17} />
               </button>
             ) : (
               <button
@@ -1317,6 +1778,7 @@ function RegistrationPage({
                 {submitting
                   ? "Submitting..."
                   : "Submit Registration"}
+
                 <CheckCircle2 size={18} />
               </button>
             )}
@@ -1358,34 +1820,45 @@ function SuccessPage({
       <div className="success-container">
         <div className="success-icon-outer">
           <div className="success-icon">
-            <Check size={56} strokeWidth={3.5} />
+            <Check
+              size={56}
+              strokeWidth={3.5}
+            />
           </div>
         </div>
 
         <h1>Registration Successful!</h1>
+
         <p>
-          Thank you for registering for Winter Get Together.
+          Thank you for registering for
+          Winter Get Together.
         </p>
 
         <div className="success-reference">
           <span>Registration ID</span>
+
           <div>
             <strong>{id}</strong>
+
             <button
               type="button"
               onClick={copyId}
               aria-label="Copy registration ID"
             >
-              {copied
-                ? <Check size={20} />
-                : <Copy size={20} />}
+              {copied ? (
+                <Check size={20} />
+              ) : (
+                <Copy size={20} />
+              )}
             </button>
           </div>
+
           {copied && <small>Copied!</small>}
         </div>
 
         <p className="reference-note">
-          Please save your registration ID for future reference.
+          Please save your registration ID
+          for future reference.
         </p>
 
         <button
@@ -1393,7 +1866,10 @@ function SuccessPage({
           className="success-home-button"
           onClick={onHome}
         >
-          <Home size={18} fill="currentColor" />
+          <Home
+            size={18}
+            fill="currentColor"
+          />
           Back to Home
         </button>
       </div>
@@ -1408,14 +1884,26 @@ function SuccessPage({
 // =====================================================
 
 export default function App() {
-  const [page, setPage] = useState<Page>("home");
-  const [registrationId, setRegistrationId] = useState("");
+  const [page, setPage] =
+    useState<Page>("home");
+
+  const [
+    registrationId,
+    setRegistrationId,
+  ] = useState("");
+
   const [formKey, setFormKey] = useState(0);
 
   function navigate(nextPage: Page) {
-    if (nextPage === "register" && page !== "register") {
-      setFormKey((current) => current + 1);
+    if (
+      nextPage === "register" &&
+      page !== "register"
+    ) {
+      setFormKey(
+        (current) => current + 1
+      );
     }
+
     setPage(nextPage);
   }
 
@@ -1428,28 +1916,43 @@ export default function App() {
     <div className="app-shell">
       <main
         className={`app-main ${
-          page === "register" ? "registration-main-scroll" : ""
+          page === "register"
+            ? "registration-main-scroll"
+            : ""
         }`}
       >
         {page === "home" && (
-          <HomePage onRegister={() => navigate("register")} />
+          <HomePage
+            onRegister={() =>
+              navigate("register")
+            }
+          />
         )}
 
-        {page === "about" && <AboutPage />}
-        {page === "contact" && <ContactPage />}
+        {page === "about" && (
+          <AboutPage />
+        )}
+
+        {page === "contact" && (
+          <ContactPage />
+        )}
 
         {page === "register" && (
           <RegistrationPage
             key={formKey}
             onSuccess={handleSuccess}
-            onBackHome={() => navigate("home")}
+            onBackHome={() =>
+              navigate("home")
+            }
           />
         )}
 
         {page === "success" && (
           <SuccessPage
             id={registrationId}
-            onHome={() => navigate("home")}
+            onHome={() =>
+              navigate("home")
+            }
           />
         )}
       </main>

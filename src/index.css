@@ -3924,3 +3924,423 @@ input[type="tel"] {
     font-size: 10px;
   }
 }
+
+/* ================================================
+   FINAL COUNTDOWN POSITION FIX
+=============================================== */
+
+/* Desktop: title -> timer -> event info -> button */
+
+@media (min-width: 701px) {
+  .home-screen .home-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    align-items: center;
+    gap: 10px;
+    padding-top: 10px !important;
+    padding-bottom: clamp(58px, 8vh, 85px) !important;
+  }
+
+  .home-screen .hero-top {
+    order: 1;
+    width: 100%;
+    flex: 0 1 auto !important;
+  }
+
+  .home-screen .home-countdown-placement {
+    order: 2;
+    width: 100%;
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    margin: 8px 0 12px;
+    position: relative;
+    z-index: 8;
+  }
+
+  .home-screen .hero-bottom {
+    order: 3;
+    flex: 0 0 auto !important;
+    width: 100%;
+    margin: 0 !important;
+  }
+}
+
+/* Countdown appearance on both desktop and mobile */
+
+.home-screen .home-countdown-placement .event-countdown {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min(385px, 100%);
+  margin: 0 !important;
+  gap: 9px;
+  text-align: center;
+}
+
+.home-screen .home-countdown-placement .countdown-heading {
+  margin: 0;
+  color: #bcecff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 6px #002b69;
+}
+
+.home-screen .home-countdown-placement .countdown-grid {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.home-screen .home-countdown-placement .countdown-box {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 5px;
+  border: 1px solid rgba(185, 226, 255, 0.48);
+  border-radius: 12px;
+  background: rgba(5, 37, 94, 0.38);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.home-screen .home-countdown-placement .countdown-box strong {
+  color: white;
+  font-size: 25px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.home-screen .home-countdown-placement .countdown-box span {
+  color: #b2ecff;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+/* ================================================
+   MOBILE: timer after Register Now button
+=============================================== */
+
+@media (max-width: 700px) {
+  .home-screen .home-layout {
+    width: 95%;
+    height: 100%;
+    padding: 10px 0 44px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .home-screen .hero-top {
+    order: 1;
+    width: 100%;
+    flex: 0 0 auto !important;
+  }
+
+  .home-screen .hero-bottom {
+    order: 2;
+    width: 100%;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    gap: 12px;
+  }
+
+  .home-screen .home-countdown-placement {
+    order: 3;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    flex: 0 0 auto;
+    margin: 0 0 5px;
+    position: relative;
+    z-index: 8;
+  }
+
+  .home-screen .home-countdown-placement .event-countdown {
+    width: min(310px, 100%);
+    gap: 7px;
+  }
+
+  .home-screen .home-countdown-placement .countdown-heading {
+    font-size: 9px;
+    letter-spacing: 1.7px;
+  }
+
+  .home-screen .home-countdown-placement .countdown-grid {
+    gap: 7px;
+  }
+
+  .home-screen .home-countdown-placement .countdown-box {
+    padding: 8px 3px;
+    border-radius: 9px;
+  }
+
+  .home-screen .home-countdown-placement .countdown-box strong {
+    font-size: 20px;
+  }
+
+  .home-screen .home-countdown-placement .countdown-box span {
+    font-size: 8px;
+  }
+}
+
+/* Compact layout on short phones */
+
+@media (max-width: 700px) and (max-height: 750px) {
+  .home-screen .logo-frame {
+    width: 75px !important;
+    height: 75px !important;
+  }
+
+  .home-screen .hero-heading-group {
+    margin-top: 5px !important;
+  }
+
+  .home-screen .hero-subtitle {
+    margin-top: 6px !important;
+  }
+
+  .home-screen .hero-bottom {
+    gap: 8px;
+  }
+}
+
+/* ================================================
+   MOBILE REGISTRATION BANNER FIX
+=============================================== */
+
+@media (max-width: 700px) {
+
+  /* Banner must be an absolute background,
+     not a layout element. */
+
+  .registration-main-scroll .registration-screen
+  .registration-top-banner {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 145px !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    z-index: 0 !important;
+
+    background: linear-gradient(
+      110deg,
+      #031635,
+      #08478d,
+      #061638
+    );
+
+    clip-path: polygon(
+      0 0,
+      100% 0,
+      100% 70%,
+      80% 64%,
+      55% 96%,
+      31% 78%,
+      12% 97%,
+      0 73%
+    );
+  }
+
+  /* Content begins from top of registration page */
+
+  .registration-main-scroll .registration-main {
+    position: relative !important;
+    z-index: 2 !important;
+    width: 94%;
+    max-width: 480px;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 auto !important;
+    padding: 12px 0 42px !important;
+  }
+
+  .registration-main-scroll .registration-intro {
+    position: relative;
+    z-index: 3;
+    text-align: center;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* White title safely inside navy banner */
+
+  .registration-main-scroll .registration-intro h1 {
+    position: relative;
+    margin: 0 !important;
+    color: #ffffff !important;
+    font-size: 25px !important;
+    line-height: 1.25 !important;
+    text-shadow: 0 2px 5px rgba(0, 10, 36, 0.45);
+  }
+
+  .registration-main-scroll .registration-intro h2 {
+    position: relative;
+    margin: 4px 0 0 !important;
+    color: #85ebff !important;
+    font-size: 15px !important;
+    line-height: 1.55 !important;
+  }
+
+  /* Divider inside banner; following margin
+     places heading below the angled bottom */
+
+  .registration-main-scroll .registration-heading-line {
+    width: 82px;
+    height: 3px;
+    margin: 13px auto 69px !important;
+    background: linear-gradient(90deg, #7deaff, #673ae8);
+  }
+
+  /* Event Registration clearly below banner */
+
+  .registration-main-scroll .registration-intro h3 {
+    margin: 0 0 7px !important;
+    color: #0c1a43 !important;
+    font-size: 21px !important;
+    line-height: 1.35 !important;
+  }
+
+  .registration-main-scroll .registration-intro p {
+    margin: 0 !important;
+    color: #536587 !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+
+  .registration-main-scroll .registration-progress {
+    margin: 20px auto 18px !important;
+  }
+
+  .registration-main-scroll .banner-snowflake {
+    display: none !important;
+  }
+
+  .registration-main-scroll .registration-card {
+    padding: 16px !important;
+  }
+}
+
+/* ==============================================
+   ONE COUNTDOWN — RESPONSIVE POSITION
+============================================== */
+
+.home-screen .home-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 0;
+}
+
+.home-screen .hero-top {
+  order: 1;
+  width: 100%;
+}
+
+.home-screen .home-countdown-placement {
+  order: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  flex: 0 0 auto;
+  margin: 8px 0;
+  position: relative;
+  z-index: 8;
+}
+
+.home-screen .home-countdown-placement .event-countdown {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(385px, 100%);
+  margin: 0 !important;
+}
+
+.home-screen .home-countdown-placement .countdown-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+  width: 100%;
+}
+
+.home-screen .hero-bottom {
+  order: 3;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+/* Smaller desktop screens */
+
+@media (min-width: 701px) and (max-height: 800px) {
+  .home-screen .home-layout {
+    padding-top: 8px !important;
+    padding-bottom: 58px !important;
+    gap: 5px;
+  }
+
+  .home-screen .home-countdown-placement {
+    margin: 2px 0 8px;
+  }
+
+  .home-screen .home-countdown-placement .countdown-box {
+    padding: 7px 5px;
+  }
+
+  .home-screen .home-countdown-placement .countdown-box strong {
+    font-size: 23px;
+  }
+}
+
+/* Mobile — countdown after Register Now */
+
+@media (max-width: 700px) {
+  .home-screen .home-layout {
+    justify-content: flex-start !important;
+    gap: 12px;
+  }
+
+  .home-screen .hero-top {
+    order: 1;
+  }
+
+  .home-screen .hero-bottom {
+    order: 2;
+    margin-top: 8px !important;
+  }
+
+  .home-screen .home-countdown-placement {
+    order: 3;
+    margin: 0 auto 12px;
+  }
+
+  .home-screen .home-countdown-placement .event-countdown {
+    width: min(310px, 100%);
+  }
+
+  .home-screen .home-countdown-placement .countdown-box {
+    padding: 9px 5px;
+  }
+
+  .home-screen .home-countdown-placement .countdown-box strong {
+    font-size: 21px;
+  }
+
+  /* Remove large decorative flakes over title */
+  .home-screen .snow-layer {
+    display: none !important;
+  }
+}
