@@ -115,13 +115,7 @@ const COUNTRY_OPTIONS = {
     length: 10,
     placeholder: "7700900000",
   },
-  LK: {
-    code: "+94",
-    flag: "🇱🇰",
-    name: "Sri Lanka",
-    length: 9,
-    placeholder: "771234567",
-  },
+  
 } as const;
 
 const EMPTY_PERSONAL: PersonalInformation = {
