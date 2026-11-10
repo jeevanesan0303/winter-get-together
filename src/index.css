@@ -3394,3 +3394,367 @@ body,
   font-size: 11px;
 }
 
+
+/* =====================================================
+   FINAL RESPONSIVE CORRECTIONS
+   HOME + REGISTRATION + COUNTRY PHONE SELECTOR
+===================================================== */
+
+/* International phone input */
+
+.international-phone-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 44px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #cbd6ee;
+  border-radius: 9px;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.international-phone-wrapper:focus-within {
+  border-color: #6752df;
+  box-shadow: 0 0 0 3px rgba(97,77,227,.10);
+}
+
+.registration-screen .international-phone-wrapper
+.phone-country-select {
+  flex: 0 0 112px;
+  width: 112px;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0 9px;
+  border: 0;
+  border-right: 1px solid #cbd6ee;
+  border-radius: 0;
+  background: #edf3ff;
+  color: #152b63;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.registration-screen .international-phone-wrapper
+input[type="tel"] {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0 12px;
+  border: 0 !important;
+  border-radius: 0;
+  outline: 0 !important;
+  background: transparent;
+  box-shadow: none !important;
+  color: #10214c;
+  font-size: 14px;
+}
+
+.uk-phone-hint,
+.field-help {
+  display: block;
+  margin-top: 4px;
+  color: #66799e;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/* Optional question clear button */
+
+.achievement-clear-button {
+  align-self: center;
+  padding: 8px 12px;
+  border: 1px solid #d5def0;
+  border-radius: 9px;
+  background: #fff;
+  color: #6655bf;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.achievement-clear-button:hover {
+  background: #f1efff;
+}
+
+/* =====================================================
+   REGISTRATION PAGE — NATURAL PAGE HEIGHT
+===================================================== */
+
+.app-main.registration-main-scroll {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+}
+
+.registration-main-scroll .registration-screen {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow: visible !important;
+}
+
+.registration-main-scroll .registration-main {
+  width: min(1000px, 94%);
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 24px 0 50px;
+  display: flex;
+  flex-direction: column;
+}
+
+.registration-main-scroll .registration-form {
+  flex: none !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+.registration-main-scroll .registration-card {
+  height: auto !important;
+  flex: none !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 22px;
+}
+
+.registration-main-scroll .form-bottom-actions {
+  flex-shrink: 0;
+  margin-top: 15px;
+  padding-bottom: 10px;
+}
+
+/* Keep decorative wave beneath the form */
+
+.registration-main-scroll .winter-wave {
+  bottom: 0;
+  height: 20px;
+}
+
+/* =====================================================
+   MOBILE HOME — PROTECT TITLE FROM SNOWFLAKES
+===================================================== */
+
+@media (max-width: 700px) {
+
+  /* Large decorative snowflakes are the cause
+     of text overlap in the screenshot. */
+  .home-screen .snow-layer {
+    display: none !important;
+  }
+
+  /* Falling particles remain, but cannot cover text */
+  .home-screen .falling-snow {
+    z-index: 1 !important;
+    opacity: .45;
+    pointer-events: none;
+  }
+
+  .home-screen .home-layout {
+    position: relative;
+    z-index: 5 !important;
+  }
+
+  .home-screen .hero-top,
+  .home-screen .hero-heading-group,
+  .home-screen .hero-bottom {
+    position: relative;
+    z-index: 6;
+  }
+
+  /* Keep English title within mobile viewport */
+
+  .home-screen .hero-main-title {
+    position: relative;
+    z-index: 6;
+    font-size: clamp(21px, 5.6vw, 30px) !important;
+    line-height: 1.18;
+    letter-spacing: -.6px;
+    white-space: nowrap;
+  }
+
+  .home-screen .hero-tamil-title {
+    position: relative;
+    z-index: 6;
+    font-size: clamp(18px, 5vw, 27px) !important;
+    line-height: 1.4;
+    text-shadow: 0 2px 6px #003b82;
+  }
+
+  .home-screen .hero-subtitle {
+    position: relative;
+    z-index: 6;
+    max-width: 350px;
+    margin-inline: auto;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  /* Keep event information readable */
+
+  .home-screen .event-info-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .home-screen .event-info-item {
+    min-width: 0;
+  }
+
+  .home-screen .event-info-text {
+    min-width: 0;
+  }
+
+  .home-screen .event-info-text strong {
+    overflow-wrap: anywhere;
+  }
+
+  /* =================================================
+     MOBILE REGISTRATION FORM
+  ================================================= */
+
+  .registration-main-scroll .registration-main {
+    width: 94%;
+    max-width: 480px;
+    min-height: 0 !important;
+    padding: 12px 0 35px;
+  }
+
+  .registration-screen .registration-intro {
+    margin: 0;
+  }
+
+  .registration-screen .registration-intro h1 {
+    font-size: clamp(22px, 6vw, 28px);
+    line-height: 1.2;
+  }
+
+  .registration-screen .registration-intro h2 {
+    font-size: clamp(13px, 3.6vw, 17px);
+    line-height: 1.5;
+  }
+
+  .registration-screen .registration-intro h3 {
+    font-size: 20px;
+  }
+
+  .registration-screen .registration-intro p {
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  /* Remove large snowflake in registration heading */
+
+  .registration-screen .banner-snowflake {
+    display: none !important;
+  }
+
+  .registration-screen .registration-progress {
+    margin: 12px auto 15px;
+  }
+
+  .registration-main-scroll .registration-card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .registration-screen .card-heading {
+    gap: 10px;
+    margin-bottom: 13px;
+  }
+
+  .registration-screen .card-heading h3 {
+    font-size: 17px;
+  }
+
+  .registration-screen .fields-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .registration-screen .form-field {
+    gap: 5px;
+  }
+
+  .registration-screen .form-field > label {
+    font-size: 12px;
+  }
+
+  .registration-screen .form-field input:not([type="file"]),
+  .registration-screen .form-field select {
+    font-size: 13px;
+  }
+
+  .registration-screen .form-field textarea {
+    min-height: 68px;
+    resize: vertical;
+  }
+
+  .registration-screen .international-phone-wrapper {
+    height: 43px;
+  }
+
+  .registration-screen .international-phone-wrapper
+  .phone-country-select {
+    flex-basis: 100px;
+    width: 100px;
+    font-size: 12px;
+  }
+
+  .registration-screen .international-phone-wrapper
+  input[type="tel"] {
+    font-size: 13px;
+  }
+
+  .registration-main-scroll .form-bottom-actions {
+    margin-top: 14px;
+    padding-bottom: 0;
+  }
+
+  .registration-main-scroll .achievement-question {
+    padding: 13px;
+  }
+
+  .registration-main-scroll .achievement-options {
+    gap: 8px;
+  }
+
+  .registration-main-scroll .achievement-proof {
+    margin-left: 0;
+  }
+}
+
+/* Very small phones */
+
+@media (max-width: 380px) {
+  .home-screen .hero-main-title {
+    font-size: 20px !important;
+  }
+
+  .home-screen .hero-tamil-title {
+    font-size: 18px !important;
+  }
+
+  .registration-main-scroll .registration-main {
+    width: 95%;
+  }
+
+  .registration-main-scroll .registration-card {
+    padding: 13px;
+  }
+}
+
+/* Respect reduced-motion preference */
+
+@media (prefers-reduced-motion: reduce) {
+  .falling-snow-particle,
+  .snowflake {
+    animation: none !important;
+  }
+}
