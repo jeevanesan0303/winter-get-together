@@ -297,7 +297,7 @@ const QUESTIONS: QuestionDefinition[] = [
     tamilQuestion:
       "GCSE பரீட்சையில் குறைந்தபட்சம் 5A (New Grade 5 Seven) பெற்றுள்ளீர்களா?",
     englishQuestion:
-      "Have you achieved at least five A grades (Grade 7 under the new grading system) in your GCSE examinations?",
+      "Have you achieved at least five A grades (New Grade 5 Seven) in your GCSE examinations?",
     options: ["ஆம்", "இல்லை"],
     positiveOptions: ["ஆம்"],
     uploadLabel: "GCSE Certificate / Result Sheet",
