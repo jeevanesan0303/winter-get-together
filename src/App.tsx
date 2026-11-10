@@ -69,14 +69,12 @@ const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 type Page = "home" | "about" | "contact" | "register" | "success";
 type Step = 1 | 2 | 3;
-type Country = "UK" | "LK";
 type FormLanguage = "ta" | "en";
 
 type PersonalInformation = {
   fullName: string;
   dob: string;
   gender: string;
-  country: Country;
   phone: string;
   address: string;
   agreed: boolean;
@@ -104,25 +102,17 @@ type SavedRegistration = {
 };
 
 // =====================================================
-// COUNTRY CODE CONFIGURATION
+// FIXED UK PHONE CONFIGURATION (+44 ONLY)
 // =====================================================
 
-const COUNTRY_OPTIONS = {
-  UK: {
-    code: "+44",
-    flag: "🇬🇧",
-    name: "United Kingdom",
-    length: 10,
-    placeholder: "7700900000",
-  },
-  
-} as const;
+const UK_DIAL_CODE = "+44";
+const UK_PHONE_LENGTH = 10;
+const UK_PHONE_PLACEHOLDER = "7700900000";
 
 const EMPTY_PERSONAL: PersonalInformation = {
   fullName: "",
   dob: "",
   gender: "",
-  country: "UK",
   phone: "",
   address: "",
   agreed: false,
@@ -377,15 +367,14 @@ function validDOB(value: string): boolean {
   );
 }
 
-function getNationalPhone(phone: string, country: Country) {
-  const code = COUNTRY_OPTIONS[country].code;
-  return phone.startsWith(code) ? phone.slice(code.length) : "";
+function getNationalPhone(phone: string): string {
+  return phone.startsWith(UK_DIAL_CODE)
+    ? phone.slice(UK_DIAL_CODE.length)
+    : "";
 }
 
 function validPhone(personal: PersonalInformation): boolean {
-  const config = COUNTRY_OPTIONS[personal.country];
-  const national = getNationalPhone(personal.phone, personal.country);
-  return /^\d+$/.test(national) && national.length === config.length;
+  return /^\+44\d{10}$/.test(personal.phone);
 }
 
 function validProof(file: File): boolean {
@@ -1095,11 +1084,7 @@ function RegistrationPage({
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const country = COUNTRY_OPTIONS[personal.country];
-  const nationalPhone = getNationalPhone(
-    personal.phone,
-    personal.country
-  );
+  const nationalPhone = getNationalPhone(personal.phone);
 
   function selectLanguage(next: FormLanguage) {
     onLanguageChange(next);
@@ -1115,27 +1100,11 @@ function RegistrationPage({
     setError("");
   }
 
-  function changeCountry(value: Country) {
-    setPersonal((current) => ({
-      ...current,
-      country: value,
-      phone: "",
-    }));
-    setError("");
-  }
-
   function changePhone(event: ChangeEvent<HTMLInputElement>) {
-    let digits = event.target.value.replace(/\D/g, "");
-
-    if (personal.country === "LK" && digits.startsWith("0")) {
-      digits = digits.slice(1);
-    }
-
-    digits = digits.slice(0, country.length);
-
+    const digits = event.target.value.replace(/\D/g, "").slice(0, UK_PHONE_LENGTH);
     setPersonal((current) => ({
       ...current,
-      phone: digits ? `${country.code}${digits}` : "",
+      phone: digits ? `${UK_DIAL_CODE}${digits}` : "",
     }));
     setError("");
   }
@@ -1204,7 +1173,7 @@ function RegistrationPage({
     }
 
     if (!validPhone(personal)) {
-      return `${t.invalidPhone} (${country.code}, ${country.length} digits)`;
+      return `${t.invalidPhone} (${UK_DIAL_CODE}, ${UK_PHONE_LENGTH} digits)`;
     }
 
     if (personal.address.trim().length < 8) return t.invalidAddress;
@@ -1402,24 +1371,20 @@ function RegistrationPage({
 
                   <FormField label={t.phone} required>
                     <div className="international-phone-wrapper">
-                      <select
+                      <span
                         className="phone-country-select"
-                        value={personal.country}
-                        aria-label="Country calling code"
-                        onChange={(e) =>
-                          changeCountry(e.target.value as Country)
-                        }
+                        aria-label="United Kingdom calling code +44"
+                        style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
                       >
-                        <option value="UK">🇬🇧 +44</option>
-                        <option value="LK">🇱🇰 +94</option>
-                      </select>
+                        🇬🇧 +44
+                      </span>
 
                       <input
                         type="tel"
                         inputMode="numeric"
                         autoComplete="tel-national"
-                        placeholder={country.placeholder}
-                        maxLength={country.length}
+                        placeholder={UK_PHONE_PLACEHOLDER}
+                        maxLength={UK_PHONE_LENGTH}
                         value={nationalPhone}
                         onChange={changePhone}
                         aria-label={t.phone}
@@ -1427,13 +1392,8 @@ function RegistrationPage({
                     </div>
 
                     <small className="uk-phone-hint">
-                      {country.code} — {country.length}{" "}
+                      {UK_DIAL_CODE} — {UK_PHONE_LENGTH}{" "}
                       {language === "ta" ? "இலக்கங்கள்" : "digits"}
-                      {personal.country === "LK"
-                        ? language === "ta"
-                          ? " (முதலில் 0 சேர்க்க வேண்டாம்)"
-                          : " (without leading 0)"
-                        : ""}
                     </small>
                   </FormField>
 
@@ -1515,10 +1475,6 @@ function RegistrationPage({
                             ? t.female
                             : ""
                       }
-                    />
-                    <ReviewItem
-                      label={t.country}
-                      value={country.name}
                     />
                     <ReviewItem
                       label={t.phone}
