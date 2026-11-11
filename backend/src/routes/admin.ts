@@ -86,10 +86,15 @@ interface CsvApplicantRow extends ApplicantRecord {
   email_status: string | null;
 }
 
+
 const ADMIN_ORIGINS = new Set([
   "http://localhost:5173",
   "http://127.0.0.1:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5174",
+  "https://winter-get-together.purple-forest-fa52.workers.dev",
 ]);
+
 
 const PDF_FONT_R2_KEY =
   "system/fonts/NotoSansTamil-Regular.ttf";
