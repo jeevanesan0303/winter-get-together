@@ -1,0 +1,25 @@
+
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+
+  "name": "winter-get-together-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-11",
+  "workers_dev": true,
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "winter-get-together-db",
+      "database_id": "a43f4826-efab-40c0-ab84-f6dc6c01e4c5",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  "r2_buckets": [
+    {
+      "binding": "DOCUMENTS",
+      "bucket_name": "winter-get-together-documents"
+    }
+  ]
+}

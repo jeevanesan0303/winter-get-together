@@ -9,6 +9,7 @@ import {
   type ReactNode,
   type KeyboardEvent,
 } from "react";
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -32,10 +33,31 @@ import {
   UserRound,
   UsersRound,
 } from "lucide-react";
+
 import "./index.css";
 
 // =====================================================
-// EVENT CONFIGURATION - PRESERVED FROM YOUR FILE
+// BACKEND API CONFIGURATION
+// =====================================================
+
+// Local:
+// http://127.0.0.1:8787
+//
+// Before final deployment, set VITE_API_URL in the
+// frontend build environment to your actual API URL.
+//
+// Do not place API secrets in frontend environment values.
+
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL ||
+  "http://127.0.0.1:8787"
+).replace(/\/+$/, "");
+
+const MAX_FILE_SIZE_MB = 20;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+// =====================================================
+// EVENT CONFIGURATION - PRESERVED
 // =====================================================
 
 const EVENT = {
@@ -59,15 +81,17 @@ const IMAGES = {
   background: "/images/winter-background.png",
 };
 
-const STORAGE_KEY = "winter_event_registrations_v2";
-const MAX_FILE_SIZE_MB = 20;
-const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
-
 // =====================================================
 // TYPES
 // =====================================================
 
-type Page = "home" | "about" | "contact" | "register" | "success";
+type Page =
+  | "home"
+  | "about"
+  | "contact"
+  | "register"
+  | "success";
+
 type Step = 1 | 2 | 3;
 type FormLanguage = "ta" | "en";
 
@@ -93,17 +117,52 @@ type QuestionDefinition = {
 type Answers = Record<string, string>;
 type ProofFiles = Record<string, File | null>;
 
-type SavedRegistration = {
-  id: string;
-  createdAt: string;
-  event: string;
-  personal: PersonalInformation;
-  answers: Answers;
-  documents: Record<string, string | null>;
+type StartRegistrationResponse = {
+  success: boolean;
+  registrationId: string;
+  uploadToken: string;
+  expiresAt: string;
+  requiredDocuments: string[];
+  message?: string;
 };
 
+type UploadDocumentResponse = {
+  success: boolean;
+  documentId: string;
+  questionId: string;
+  message?: string;
+};
+
+type CompleteRegistrationResponse = {
+  success: boolean;
+  registrationId: string;
+  status: string;
+  emailStatus: string;
+  message?: string;
+};
+
+type ApiErrorResponse = {
+  success?: boolean;
+  message?: string;
+};
+
+type PendingSubmission = {
+  fingerprint: string;
+  registrationId: string;
+  uploadToken: string;
+  expiresAt: string;
+  requiredDocuments: string[];
+  uploadedDocuments: Set<string>;
+};
+
+type SubmitStage =
+  | "idle"
+  | "saving"
+  | "uploading"
+  | "finalizing";
+
 // =====================================================
-// FIXED UK PHONE CONFIGURATION (+44 ONLY)
+// UK PHONE CONFIGURATION
 // =====================================================
 
 const UK_DIAL_CODE = "+44";
@@ -128,7 +187,8 @@ const FORM_TEXT = {
   ta: {
     language: "படிவ மொழி",
     pageTitle: "நிகழ்வுப் பதிவு",
-    subtitle: "நிகழ்வில் கலந்துகொள்ள உங்கள் விவரங்களைப் பதிவு செய்யவும்",
+    subtitle:
+      "நிகழ்வில் கலந்துகொள்ள உங்கள் விவரங்களைப் பதிவு செய்யவும்",
     personalStep: "தனிப்பட்ட விவரங்கள்",
     achievementsStep: "சாதனைகள்",
     reviewStep: "சரிபார்ப்பு",
@@ -136,29 +196,40 @@ const FORM_TEXT = {
     achievementsTitle: "சாதனைகள் மற்றும் தகுதிகள்",
     reviewTitle: "பதிவு விவரங்களைச் சரிபார்க்கவும்",
     fullName: "விண்ணப்பதாரரின் முழுப் பெயர்",
-    namePlaceholder: "விண்ணப்பதாரரின் முழுப் பெயரை உள்ளிடவும்",
+    namePlaceholder:
+      "விண்ணப்பதாரரின் முழுப் பெயரை உள்ளிடவும்",
     dob: "பிறந்த தேதி",
-    dobHint: "எதிர்காலத் தேதிகளைத் தெரிவுசெய்ய முடியாது.",
+    dobHint:
+      "எதிர்காலத் தேதிகளைத் தெரிவுசெய்ய முடியாது.",
     gender: "பாலினம்",
     selectGender: "பாலினத்தைத் தெரிவுசெய்யவும்",
     male: "ஆண்",
     female: "பெண்",
     phone: "தொடர்பு இலக்கம்",
     email: "மின்னஞ்சல் முகவரி",
-    emailPlaceholder: "உங்கள் மின்னஞ்சல் முகவரியை உள்ளிடவும்",
+    emailPlaceholder:
+      "உங்கள் மின்னஞ்சல் முகவரியை உள்ளிடவும்",
     address: "முழு முகவரி",
-    addressPlaceholder: "வீட்டு இலக்கம், வீதி, நகரம், அஞ்சல் குறியீடு, நாடு",
+    addressPlaceholder:
+      "வீட்டு இலக்கம், வீதி, நகரம், அஞ்சல் குறியீடு, நாடு",
     country: "நாடு",
     previous: "முந்தையது",
     next: "அடுத்த படி",
     home: "முகப்பு",
     submit: "பதிவைச் சமர்ப்பிக்கவும்",
     submitting: "சமர்ப்பிக்கப்படுகிறது...",
+    savingRegistration:
+      "பதிவு விவரங்கள் சேமிக்கப்படுகின்றன...",
+    uploadingDocuments:
+      "சான்றிதழ்கள் பதிவேற்றப்படுகின்றன...",
+    finalizingRegistration:
+      "பதிவு உறுதிசெய்யப்படுகிறது...",
     clear: "நீக்கு",
     notSelected: "தெரிவுசெய்யப்படவில்லை",
     answer: "பதில்",
     upload: "சான்றிதழைப் பதிவேற்றவும்",
-    uploadHint: "PDF, JPG அல்லது PNG — அதிகபட்சம் 20 MB",
+    uploadHint:
+      "PDF, JPG அல்லது PNG — அதிகபட்சம் 20 MB",
     selectedFile: "தேர்ந்தெடுக்கப்பட்ட கோப்பு",
     reviewPersonal: "தனிப்பட்ட தகவல்கள்",
     reviewAchievements: "சாதனைகள் மற்றும் தகுதிகள்",
@@ -166,26 +237,46 @@ const FORM_TEXT = {
       "நான் வழங்கிய தகவல்கள் சரியானவை என்றும் நிகழ்வுப் பதிவிற்காக அவற்றைப் பயன்படுத்த ஒப்புக்கொள்கிறேன் என்றும் உறுதிப்படுத்துகிறேன்.",
     introduction:
       "உங்களுக்குப் பொருந்தும் சாதனைகளை மட்டும் தெரிவுசெய்யவும். அனைத்துக் கேள்விகளுக்கும் பதிலளிக்க வேண்டிய அவசியமில்லை. சாதனையைத் தெரிவுசெய்தால் அதற்கான சான்றிதழை இணைக்கவும்.",
-    invalidName: "விண்ணப்பதாரரின் முழுப் பெயரை உள்ளிடவும்.",
-    invalidDob: "சரியான பிறந்த தேதியை உள்ளிடவும். எதிர்காலத் தேதி அனுமதிக்கப்படாது.",
+    invalidName:
+      "விண்ணப்பதாரரின் முழுப் பெயரை உள்ளிடவும்.",
+    invalidDob:
+      "சரியான பிறந்த தேதியை உள்ளிடவும். எதிர்காலத் தேதி அனுமதிக்கப்படாது.",
     invalidGender: "பாலினத்தைத் தெரிவுசெய்யவும்.",
-    invalidAddress: "உங்கள் முழு முகவரியை உள்ளிடவும்.",
-    invalidPhone: "சரியான தொடர்பு இலக்கத்தை உள்ளிடவும்.",
-    invalidEmail: "சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்.",
-    missingProof: "தெரிவுசெய்த சாதனைக்கான சான்றிதழைப் பதிவேற்றவும்.",
-    invalidFile: "PDF, JPG அல்லது PNG கோப்பை மட்டும் பதிவேற்றவும்.",
-    fileSize: "கோப்பு அளவு 20 MB-ஐ விட அதிகமாக இருக்கக்கூடாது.",
-    invalidAnswer: "தெரிவுசெய்த பதில் சரியானதல்ல.",
-    confirmRequired: "விவரங்கள் சரியானவை என்பதை உறுதிப்படுத்தவும்.",
-    saveFailed: "பதிவைச் சேமிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+    invalidAddress:
+      "உங்கள் முழு முகவரியை உள்ளிடவும்.",
+    invalidPhone:
+      "சரியான தொடர்பு இலக்கத்தை உள்ளிடவும்.",
+    invalidEmail:
+      "சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்.",
+    missingProof:
+      "தெரிவுசெய்த சாதனைக்கான சான்றிதழைப் பதிவேற்றவும்.",
+    invalidFile:
+      "PDF, JPG அல்லது PNG கோப்பை மட்டும் பதிவேற்றவும்.",
+    fileSize:
+      "கோப்பு அளவு 20 MB-ஐ விட அதிகமாக இருக்கக்கூடாது.",
+    invalidAnswer:
+      "தெரிவுசெய்த பதில் சரியானதல்ல.",
+    confirmRequired:
+      "விவரங்கள் சரியானவை என்பதை உறுதிப்படுத்தவும்.",
+    saveFailed:
+      "பதிவைச் சமர்ப்பிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+    networkError:
+      "சேவையகத்துடன் இணைக்க முடியவில்லை. இணைய இணைப்பையும் உள்ளூர் backend சேவையையும் சரிபார்க்கவும்.",
+    closed:
+      "நிகழ்வுக்கான பதிவு முடிவடைந்துவிட்டது.",
+    sessionExpired:
+      "பதிவு அமர்வு காலாவதியாகிவிட்டது. மீண்டும் சமர்ப்பிக்கவும்.",
     success: "பதிவு வெற்றிகரமாக முடிந்தது!",
-    thankYou: "Winter Get Together நிகழ்விற்கு பதிவு செய்ததற்கு நன்றி.",
+    thankYou:
+      "Winter Get Together நிகழ்விற்கு பதிவு செய்ததற்கு நன்றி.",
     registrationId: "பதிவு இலக்கம்",
     copy: "பதிவு இலக்கத்தை நகலெடுக்கவும்",
     copied: "நகலெடுக்கப்பட்டது!",
-    saveReference: "உங்கள் பதிவு இலக்கத்தைச் சேமித்து வைத்துக்கொள்ளவும்.",
+    saveReference:
+      "உங்கள் பதிவு இலக்கத்தைச் சேமித்து வைத்துக்கொள்ளவும்.",
     backHome: "முகப்பிற்குத் திரும்பவும்",
   },
+
   en: {
     language: "Form Language",
     pageTitle: "Event Registration",
@@ -208,18 +299,23 @@ const FORM_TEXT = {
     email: "Email Address",
     emailPlaceholder: "Enter your email address",
     address: "Full Address",
-    addressPlaceholder: "House number, street, city, postcode, country",
+    addressPlaceholder:
+      "House number, street, city, postcode, country",
     country: "Country",
     previous: "Previous",
     next: "Next Step",
     home: "Home",
     submit: "Submit Registration",
     submitting: "Submitting...",
+    savingRegistration: "Saving registration...",
+    uploadingDocuments: "Uploading certificates...",
+    finalizingRegistration: "Finalizing registration...",
     clear: "Clear",
     notSelected: "Not selected",
     answer: "Answer",
     upload: "Upload supporting proof",
-    uploadHint: "PDF, JPG or PNG — Maximum 20 MB",
+    uploadHint:
+      "PDF, JPG or PNG — Maximum 20 MB",
     selectedFile: "Selected file",
     reviewPersonal: "Personal Information",
     reviewAchievements: "Achievements & Qualifications",
@@ -227,30 +323,47 @@ const FORM_TEXT = {
       "I confirm that the information provided is correct and agree to its use for event registration.",
     introduction:
       "Select only the achievements that apply to you. All questions are optional. If you select an achievement, you must upload the relevant supporting certificate.",
-    invalidName: "Please enter the applicant full name.",
-    invalidDob: "Enter a valid date of birth. Future dates are not allowed.",
+    invalidName:
+      "Please enter the applicant full name.",
+    invalidDob:
+      "Enter a valid date of birth. Future dates are not allowed.",
     invalidGender: "Please select your gender.",
-    invalidAddress: "Please enter your full address.",
-    invalidPhone: "Please enter a valid contact number.",
-    invalidEmail: "Please enter a valid email address.",
-    missingProof: "Please upload a certificate for the selected achievement.",
-    invalidFile: "Only PDF, JPG and PNG documents are allowed.",
+    invalidAddress:
+      "Please enter your full address.",
+    invalidPhone:
+      "Please enter a valid contact number.",
+    invalidEmail:
+      "Please enter a valid email address.",
+    missingProof:
+      "Please upload a certificate for the selected achievement.",
+    invalidFile:
+      "Only PDF, JPG and PNG documents are allowed.",
     fileSize: "The maximum file size is 20 MB.",
-    invalidAnswer: "An invalid answer was selected.",
-    confirmRequired: "Please confirm that your details are correct.",
-    saveFailed: "Unable to save registration. Please try again.",
+    invalidAnswer:
+      "An invalid answer was selected.",
+    confirmRequired:
+      "Please confirm that your details are correct.",
+    saveFailed:
+      "Unable to submit registration. Please try again.",
+    networkError:
+      "Cannot connect to the server. Check your connection and ensure the local backend is running.",
+    closed: "Event registration has closed.",
+    sessionExpired:
+      "Your registration session expired. Please submit again.",
     success: "Registration Successful!",
-    thankYou: "Thank you for registering for Winter Get Together.",
+    thankYou:
+      "Thank you for registering for Winter Get Together.",
     registrationId: "Registration ID",
     copy: "Copy registration ID",
     copied: "Copied!",
-    saveReference: "Please save your registration ID for future reference.",
+    saveReference:
+      "Please save your registration ID for future reference.",
     backHome: "Back to Home",
   },
 } as const;
 
 // =====================================================
-// SEVEN QUESTIONS - TAMIL AND ENGLISH
+// SEVEN ACHIEVEMENT QUESTIONS
 // =====================================================
 
 const QUESTIONS: QuestionDefinition[] = [
@@ -280,7 +393,10 @@ const QUESTIONS: QuestionDefinition[] = [
       "Grammar School தேர்வில் தேர்ச்சி பெற்றுள்ளீர்களா?",
     englishQuestion:
       "Have you passed the Grammar School entrance examination?",
-    options: ["தேர்ச்சி பெற்றுள்ளேன்", "தேர்ச்சி பெறவில்லை"],
+    options: [
+      "தேர்ச்சி பெற்றுள்ளேன்",
+      "தேர்ச்சி பெறவில்லை",
+    ],
     positiveOptions: ["தேர்ச்சி பெற்றுள்ளேன்"],
     uploadLabel: "Grammar School Result Proof",
   },
@@ -327,45 +443,67 @@ const QUESTIONS: QuestionDefinition[] = [
 ];
 
 // =====================================================
-// HELPERS
+// FORM HELPERS
 // =====================================================
 
 function initialAnswers(): Answers {
-  return Object.fromEntries(QUESTIONS.map((q) => [q.id, ""]));
+  return Object.fromEntries(
+    QUESTIONS.map((q) => [q.id, ""])
+  );
 }
 
 function initialProofFiles(): ProofFiles {
-  return Object.fromEntries(QUESTIONS.map((q) => [q.id, null]));
+  return Object.fromEntries(
+    QUESTIONS.map((q) => [q.id, null])
+  );
 }
 
-function needsProof(q: QuestionDefinition, answer: string): boolean {
-  return q.positiveOptions.includes(answer);
+function needsProof(
+  question: QuestionDefinition,
+  answer: string
+): boolean {
+  return question.positiveOptions.includes(answer);
 }
 
-function optionLabel(option: string, language: FormLanguage) {
+function optionLabel(
+  option: string,
+  language: FormLanguage
+): string {
   if (language === "ta") return option;
+
   const translations: Record<string, string> = {
     ஆம்: "Yes",
     இல்லை: "No",
     "தேர்ச்சி பெற்றுள்ளேன்": "Passed",
     "தேர்ச்சி பெறவில்லை": "Not Passed",
   };
+
   return translations[option] ?? option;
 }
 
 function todayLocal(): string {
   const now = new Date();
+
   const adjusted = new Date(
-    now.getTime() - now.getTimezoneOffset() * 60000
+    now.getTime() -
+      now.getTimezoneOffset() * 60000
   );
+
   return adjusted.toISOString().slice(0, 10);
 }
 
 function validDOB(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
 
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day));
+  const [year, month, day] = value
+    .split("-")
+    .map(Number);
+
+  const date = new Date(
+    Date.UTC(year, month - 1, day)
+  );
 
   return (
     date.getUTCFullYear() === year &&
@@ -381,26 +519,139 @@ function getNationalPhone(phone: string): string {
     : "";
 }
 
-function validPhone(personal: PersonalInformation): boolean {
+function validPhone(
+  personal: PersonalInformation
+): boolean {
   return /^\+44\d{10}$/.test(personal.phone);
 }
 
 function validProof(file: File): boolean {
   return (
     /\.(pdf|jpe?g|png)$/i.test(file.name) &&
-    ["application/pdf", "image/jpeg", "image/png"].includes(file.type) &&
+    [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+    ].includes(file.type) &&
     file.size > 0 &&
     file.size <= MAX_FILE_SIZE_BYTES
   );
 }
 
-function generateId() {
-  const suffix =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID().slice(0, 8).toUpperCase()
-      : Math.random().toString(36).slice(2, 10).toUpperCase();
+// =====================================================
+// API HELPERS
+// =====================================================
 
-  return `REG-${new Date().getFullYear()}-${suffix}`;
+class RegistrationApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "RegistrationApiError";
+    this.status = status;
+  }
+}
+
+async function apiRequest<T>(
+  endpoint: string,
+  options: RequestInit
+): Promise<T> {
+  let response: Response;
+
+  try {
+    response = await fetch(
+      `${API_BASE_URL}${endpoint}`,
+      {
+        ...options,
+        cache: "no-store",
+      }
+    );
+  } catch {
+    throw new RegistrationApiError(
+      "Unable to connect to the registration server.",
+      0
+    );
+  }
+
+  let result: ApiErrorResponse;
+
+  try {
+    result =
+      (await response.json()) as ApiErrorResponse;
+  } catch {
+    throw new RegistrationApiError(
+      `Unexpected server response (${response.status}).`,
+      response.status
+    );
+  }
+
+  if (!response.ok || result.success === false) {
+    throw new RegistrationApiError(
+      result.message ||
+        `Registration request failed (${response.status}).`,
+      response.status
+    );
+  }
+
+  return result as T;
+}
+
+function getSubmissionFingerprint(
+  personal: PersonalInformation,
+  answers: Answers,
+  files: ProofFiles,
+  language: FormLanguage
+): string {
+  const fileDetails = QUESTIONS.map((q) => {
+    const file = files[q.id];
+
+    return {
+      id: q.id,
+      name: file?.name ?? null,
+      size: file?.size ?? null,
+      lastModified: file?.lastModified ?? null,
+    };
+  });
+
+  return JSON.stringify({
+    personal: {
+      fullName: personal.fullName.trim(),
+      dob: personal.dob,
+      gender: personal.gender,
+      phone: personal.phone,
+      email: personal.email.trim().toLowerCase(),
+      address: personal.address.trim(),
+      agreed: personal.agreed,
+    },
+    language,
+    answers,
+    files: fileDetails,
+  });
+}
+
+function getApiErrorMessage(
+  error: unknown,
+  language: FormLanguage
+): string {
+  const t = FORM_TEXT[language];
+
+  if (error instanceof RegistrationApiError) {
+    if (error.status === 0) {
+      return t.networkError;
+    }
+
+    if (error.status === 403) {
+      return t.closed;
+    }
+
+    return error.message;
+  }
+
+  if (error instanceof Error) {
+    return error.message || t.saveFailed;
+  }
+
+  return t.saveFailed;
 }
 
 // =====================================================
@@ -410,15 +661,22 @@ function generateId() {
 function getCountdown() {
   const remaining = Math.max(
     0,
-    Date.parse(EVENT.registrationClosesAt) - Date.now()
+    Date.parse(EVENT.registrationClosesAt) -
+      Date.now()
   );
 
   return {
     remaining,
     days: Math.floor(remaining / 86400000),
-    hours: Math.floor((remaining / 3600000) % 24),
-    minutes: Math.floor((remaining / 60000) % 60),
-    seconds: Math.floor((remaining / 1000) % 60),
+    hours: Math.floor(
+      (remaining / 3600000) % 24
+    ),
+    minutes: Math.floor(
+      (remaining / 60000) % 60
+    ),
+    seconds: Math.floor(
+      (remaining / 1000) % 60
+    ),
   };
 }
 
@@ -426,7 +684,11 @@ function RegistrationCountdown() {
   const [time, setTime] = useState(getCountdown);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setTime(getCountdown()), 1000);
+    const timer = window.setInterval(
+      () => setTime(getCountdown()),
+      1000
+    );
+
     return () => window.clearInterval(timer);
   }, []);
 
@@ -439,19 +701,42 @@ function RegistrationCountdown() {
   }
 
   const units = [
-    { label: "DAYS", value: time.days },
-    { label: "HOURS", value: time.hours },
-    { label: "MINS", value: time.minutes },
-    { label: "SECS", value: time.seconds },
+    {
+      label: "DAYS",
+      value: time.days,
+    },
+    {
+      label: "HOURS",
+      value: time.hours,
+    },
+    {
+      label: "MINS",
+      value: time.minutes,
+    },
+    {
+      label: "SECS",
+      value: time.seconds,
+    },
   ];
 
   return (
-    <div className="event-countdown" aria-live="off">
-      <p className="countdown-heading">REGISTRATION ENDS IN</p>
+    <div
+      className="event-countdown"
+      aria-live="off"
+    >
+      <p className="countdown-heading">
+        REGISTRATION ENDS IN
+      </p>
+
       <div className="countdown-grid">
         {units.map((unit) => (
-          <div className="countdown-box" key={unit.label}>
-            <strong>{String(unit.value).padStart(2, "0")}</strong>
+          <div
+            className="countdown-box"
+            key={unit.label}
+          >
+            <strong>
+              {String(unit.value).padStart(2, "0")}
+            </strong>
             <span>{unit.label}</span>
           </div>
         ))}
@@ -464,65 +749,98 @@ function RegistrationCountdown() {
 // WINTER BACKGROUND AND SNOW
 // =====================================================
 
-const SNOW_PARTICLES = Array.from({ length: 75 }, (_, i) => ({
-  id: i,
-  left: (i * 47.37 + 13) % 100,
-  size: 2 + ((i * 7) % 7),
-  duration: 9 + ((i * 11) % 15),
-  delay: -((i * 13.71) % 24),
-  opacity: 0.22 + ((i * 3) % 7) / 12,
-  drift: -35 + ((i * 17) % 95),
-  blur: i % 7 === 0 ? 1.3 : 0,
-}));
+const SNOW_PARTICLES = Array.from(
+  { length: 75 },
+  (_, i) => ({
+    id: i,
+    left: (i * 47.37 + 13) % 100,
+    size: 2 + ((i * 7) % 7),
+    duration: 9 + ((i * 11) % 15),
+    delay: -((i * 13.71) % 24),
+    opacity: 0.22 + ((i * 3) % 7) / 12,
+    drift: -35 + ((i * 17) % 95),
+    blur: i % 7 === 0 ? 1.3 : 0,
+  })
+);
 
-function FallingSnow({ count = 75 }: { count?: number }) {
+function FallingSnow({
+  count = 75,
+}: {
+  count?: number;
+}) {
   return (
-    <div className="falling-snow" aria-hidden="true">
-      {SNOW_PARTICLES.slice(0, count).map((p) => (
-        <span
-          key={p.id}
-          className="falling-snow-particle"
-          style={
-            {
-              "--snow-left": `${p.left}%`,
-              "--snow-size": `${p.size}px`,
-              "--snow-duration": `${p.duration}s`,
-              "--snow-delay": `${p.delay}s`,
-              "--snow-opacity": p.opacity,
-              "--snow-drift": `${p.drift}px`,
-              "--snow-blur": `${p.blur}px`,
-            } as CSSProperties
-          }
-        />
-      ))}
+    <div
+      className="falling-snow"
+      aria-hidden="true"
+    >
+      {SNOW_PARTICLES.slice(0, count).map(
+        (p) => (
+          <span
+            key={p.id}
+            className="falling-snow-particle"
+            style={
+              {
+                "--snow-left": `${p.left}%`,
+                "--snow-size": `${p.size}px`,
+                "--snow-duration":
+                  `${p.duration}s`,
+                "--snow-delay": `${p.delay}s`,
+                "--snow-opacity": p.opacity,
+                "--snow-drift": `${p.drift}px`,
+                "--snow-blur": `${p.blur}px`,
+              } as CSSProperties
+            }
+          />
+        )
+      )}
     </div>
   );
 }
 
 function SnowDecorations() {
   return (
-    <div className="snow-layer" aria-hidden="true">
+    <div
+      className="snow-layer"
+      aria-hidden="true"
+    >
       {[1, 2, 3, 4, 5, 6].map((n) => (
-        <Snowflake key={n} className={`snowflake snow-${n}`} />
+        <Snowflake
+          key={n}
+          className={`snowflake snow-${n}`}
+        />
       ))}
     </div>
   );
 }
 
-function WinterBackground({ light = false }: { light?: boolean }) {
+function WinterBackground({
+  light = false,
+}: {
+  light?: boolean;
+}) {
   return (
     <>
       <div
         className="winter-background"
-        style={{ backgroundImage: `url("${IMAGES.background}")` }}
+        style={{
+          backgroundImage:
+            `url("${IMAGES.background}")`,
+        }}
       />
+
       <div
         className={
-          light ? "success-background-overlay" : "winter-overlay"
+          light
+            ? "success-background-overlay"
+            : "winter-overlay"
         }
       />
+
       <SnowDecorations />
-      <FallingSnow count={light ? 45 : 75} />
+
+      <FallingSnow
+        count={light ? 45 : 75}
+      />
     </>
   );
 }
@@ -556,7 +874,7 @@ function WinterWave() {
 }
 
 // =====================================================
-// HOME PAGE - ORIGINAL DESIGN PRESERVED
+// HOME PAGE - DESIGN PRESERVED
 // =====================================================
 
 function OrganizationLogos() {
@@ -570,7 +888,9 @@ function OrganizationLogos() {
           draggable={false}
         />
       </div>
+
       <div className="logo-vertical-divider" />
+
       <div className="logo-frame animated-logo">
         <img
           src={IMAGES.logo2}
@@ -596,10 +916,20 @@ function EventInfoCard({
 }) {
   return (
     <div className="event-info-item">
-      <div className="event-info-icon">{icon}</div>
+      <div className="event-info-icon">
+        {icon}
+      </div>
+
       <div className="event-info-text">
         <span>{title}</span>
-        <strong className={highlight ? "highlight-value" : ""}>
+
+        <strong
+          className={
+            highlight
+              ? "highlight-value"
+              : ""
+          }
+        >
           {value}
         </strong>
       </div>
@@ -607,10 +937,15 @@ function EventInfoCard({
   );
 }
 
-function HomePage({ onRegister }: { onRegister: () => void }) {
+function HomePage({
+  onRegister,
+}: {
+  onRegister: () => void;
+}) {
   return (
     <section className="winter-screen home-screen">
       <WinterBackground />
+
       <div className="home-layout">
         <div className="hero-top">
           <OrganizationLogos />
@@ -621,26 +956,40 @@ function HomePage({ onRegister }: { onRegister: () => void }) {
           </div>
 
           <div className="hero-heading-group">
-            <h1 className="hero-main-title">{EVENT.title}</h1>
-            <h3 className="hero-tamil-title" lang="ta">
+            <h1 className="hero-main-title">
+              {EVENT.title}
+            </h1>
+
+            <h3
+              className="hero-tamil-title"
+              lang="ta"
+            >
               {EVENT.tamil}
             </h3>
 
             <div className="heading-ornament">
               <span />
-              <span className="ornament-star">✦</span>
+              <span className="ornament-star">
+                ✦
+              </span>
+
               <Snowflake size={25} />
-              <span className="ornament-star">✦</span>
+
+              <span className="ornament-star">
+                ✦
+              </span>
               <span />
             </div>
 
             <p className="hero-subtitle">
-              Let&apos;s come together to celebrate our community and culture
+              Let&apos;s come together to
+              celebrate our community and
+              culture
             </p>
           </div>
         </div>
 
-        {/* One countdown: middle desktop, bottom mobile */}
+        {/* One countdown only */}
         <div className="home-countdown-placement">
           <RegistrationCountdown />
         </div>
@@ -652,16 +1001,19 @@ function HomePage({ onRegister }: { onRegister: () => void }) {
               title="Event Date"
               value={EVENT.date}
             />
+
             <EventInfoCard
               icon={<Clock3 />}
               title="Event Time"
               value={EVENT.time}
             />
+
             <EventInfoCard
               icon={<MapPin />}
               title="Event Venue"
               value={EVENT.venue}
             />
+
             <EventInfoCard
               icon={<Hourglass />}
               title="Registration Closes"
@@ -680,6 +1032,7 @@ function HomePage({ onRegister }: { onRegister: () => void }) {
           </button>
         </div>
       </div>
+
       <WinterWave />
     </section>
   );
@@ -689,28 +1042,38 @@ function AboutPage() {
   return (
     <section className="winter-screen secondary-screen">
       <WinterBackground />
+
       <div className="info-page-content">
         <span className="section-kicker">
           <Sparkles size={15} />
           OUR COMMUNITY EVENT
         </span>
+
         <h1>About Winter Get Together</h1>
         <h2 lang="ta">{EVENT.tamil}</h2>
 
         <div className="information-glass-card">
           <UsersRound size={38} />
-          <h3>Celebrating Community & Culture</h3>
+
+          <h3>
+            Celebrating Community & Culture
+          </h3>
+
           <p>
-            Winter Get Together brings families, friends and members of our
-            community together for a special celebration of connection,
-            friendship and culture.
+            Winter Get Together brings
+            families, friends and members
+            of our community together for
+            a special celebration of
+            connection, friendship and culture.
           </p>
+
           <div className="about-organizers">
             <span>{EVENT.organizer1}</span>
             <span>{EVENT.organizer2}</span>
           </div>
         </div>
       </div>
+
       <WinterWave />
     </section>
   );
@@ -720,16 +1083,23 @@ function ContactPage() {
   return (
     <section className="winter-screen secondary-screen">
       <WinterBackground />
+
       <div className="info-page-content">
-        <span className="section-kicker">GET IN TOUCH</span>
+        <span className="section-kicker">
+          GET IN TOUCH
+        </span>
+
         <h1>Contact Us</h1>
         <h2 lang="ta">{EVENT.tamil}</h2>
 
         <div className="information-glass-card">
           <Mail size={38} />
+
           <h3>Event Enquiries</h3>
+
           <p>
-            For event and registration enquiries, please contact the
+            For event and registration
+            enquiries, please contact the
             organizing associations.
           </p>
 
@@ -740,6 +1110,7 @@ function ContactPage() {
                 {EVENT.email}
               </a>
             )}
+
             {EVENT.phone && (
               <a href={`tel:${EVENT.phone}`}>
                 <Phone size={19} />
@@ -749,13 +1120,14 @@ function ContactPage() {
           </div>
         </div>
       </div>
+
       <WinterWave />
     </section>
   );
 }
 
 // =====================================================
-// ONE-TIME LANGUAGE SELECTION POPUP
+// LANGUAGE SELECTION POPUP - PRESERVED
 // =====================================================
 
 const LANGUAGE_POPUP_STYLES = `
@@ -778,9 +1150,18 @@ const LANGUAGE_POPUP_STYLES = `
   display: grid; place-items: center; border-radius: 18px;
   background: #e8e4ff; color: #5b3cda;
 }
-.language-modal h2 { margin: 0 0 8px; color: #0b1c4a; font-size: 24px; line-height: 1.3; }
-.language-modal > p { margin: 0; color: #5b6a8b; line-height: 1.7; }
-.language-modal-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin: 25px 0 16px; }
+.language-modal h2 {
+  margin: 0 0 8px; color: #0b1c4a;
+  font-size: 24px; line-height: 1.3;
+}
+.language-modal > p {
+  margin: 0; color: #5b6a8b; line-height: 1.7;
+}
+.language-modal-options {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 12px; margin: 25px 0 16px;
+}
 .language-modal-options button {
   min-width: 0; min-height: 115px; border-radius: 15px;
   border: 1px solid #d3ddf4; background: #fff; color: #19255a;
@@ -788,47 +1169,99 @@ const LANGUAGE_POPUP_STYLES = `
   flex-direction: column; gap: 7px; cursor: pointer;
   transition: transform .2s, box-shadow .2s, border-color .2s;
 }
-.language-modal-options button:hover { transform: translateY(-3px); border-color: #7961ed; box-shadow: 0 9px 26px rgba(81,55,180,.14); }
-.language-modal-options button:focus-visible { outline: 3px solid #6041da; outline-offset: 3px; }
-.language-option-title { font-size: 20px; font-weight: 800; }
-.language-option-subtitle { font-size: 12px; color: #637393; }
+.language-modal-options button:hover {
+  transform: translateY(-3px);
+  border-color: #7961ed;
+  box-shadow: 0 9px 26px rgba(81,55,180,.14);
+}
+.language-modal-options button:focus-visible {
+  outline: 3px solid #6041da; outline-offset: 3px;
+}
+.language-option-title {
+  font-size: 20px; font-weight: 800;
+}
+.language-option-subtitle {
+  font-size: 12px; color: #637393;
+}
 .language-modal-note { font-size: 12px; }
-@keyframes language-pop { from { opacity: 0; transform: translateY(14px) scale(.97); } to {opacity: 1; transform: none;} }
+@keyframes language-pop {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 @media (max-width:700px) {
-  .language-modal { padding: 24px 18px; border-radius: 20px; }
+  .language-modal {
+    padding: 24px 18px; border-radius: 20px;
+  }
   .language-modal h2 { font-size: 21px; }
   .language-modal-options button { min-height: 105px; }
 }
-@media (prefers-reduced-motion:reduce) { .language-modal { animation: none; } }
+@media (prefers-reduced-motion:reduce) {
+  .language-modal { animation: none; }
+}
 `;
 
 function LanguageSelectionModal({
   onSelect,
 }: {
-  onSelect: (language: FormLanguage) => void;
+  onSelect: (
+    language: FormLanguage
+  ) => void;
 }) {
-  const firstButtonRef = useRef<HTMLButtonElement>(null);
-  const secondButtonRef = useRef<HTMLButtonElement>(null);
+  const firstButtonRef =
+    useRef<HTMLButtonElement>(null);
+
+  const secondButtonRef =
+    useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const previousFocus = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const previousFocus =
+      document.activeElement;
+
+    const previousOverflow =
+      document.body.style.overflow;
+
+    document.body.style.overflow =
+      "hidden";
+
     firstButtonRef.current?.focus();
+
     return () => {
-      document.body.style.overflow = previousOverflow;
-      if (previousFocus instanceof HTMLElement) previousFocus.focus();
+      document.body.style.overflow =
+        previousOverflow;
+
+      if (previousFocus instanceof HTMLElement) {
+        previousFocus.focus();
+      }
     };
   }, []);
 
-  function handleModalKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+  function handleModalKeyDown(
+    event: KeyboardEvent<HTMLDivElement>
+  ) {
     if (event.key !== "Tab") return;
-    const first = firstButtonRef.current;
-    const last = secondButtonRef.current;
-    if (event.shiftKey && document.activeElement === first) {
+
+    const first =
+      firstButtonRef.current;
+
+    const last =
+      secondButtonRef.current;
+
+    if (
+      event.shiftKey &&
+      document.activeElement === first
+    ) {
       event.preventDefault();
       last?.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
+    } else if (
+      !event.shiftKey &&
+      document.activeElement === last
+    ) {
       event.preventDefault();
       first?.focus();
     }
@@ -844,24 +1277,68 @@ function LanguageSelectionModal({
         aria-describedby="language-modal-description"
         onKeyDown={handleModalKeyDown}
       >
-        <div className="language-modal-icon"><Languages size={30} /></div>
-        <h2 id="language-modal-title">Choose Your Language</h2>
-        <p id="language-modal-description" lang="ta">
+        <div className="language-modal-icon">
+          <Languages size={30} />
+        </div>
+
+        <h2 id="language-modal-title">
+          Choose Your Language
+        </h2>
+
+        <p
+          id="language-modal-description"
+          lang="ta"
+        >
           படிவ மொழியைத் தெரிவுசெய்யவும்
         </p>
+
         <div className="language-modal-options">
-          <button ref={firstButtonRef} type="button" onClick={() => onSelect("ta")}>
-            <span className="language-option-title" lang="ta">தமிழ்</span>
-            <span className="language-option-subtitle">Tamil</span>
-            <ArrowRight size={18} aria-hidden="true" />
+          <button
+            ref={firstButtonRef}
+            type="button"
+            onClick={() => onSelect("ta")}
+          >
+            <span
+              className="language-option-title"
+              lang="ta"
+            >
+              தமிழ்
+            </span>
+
+            <span className="language-option-subtitle">
+              Tamil
+            </span>
+
+            <ArrowRight
+              size={18}
+              aria-hidden="true"
+            />
           </button>
-          <button ref={secondButtonRef} type="button" onClick={() => onSelect("en")}>
-            <span className="language-option-title">English</span>
-            <span className="language-option-subtitle">English Form</span>
-            <ArrowRight size={18} aria-hidden="true" />
+
+          <button
+            ref={secondButtonRef}
+            type="button"
+            onClick={() => onSelect("en")}
+          >
+            <span className="language-option-title">
+              English
+            </span>
+
+            <span className="language-option-subtitle">
+              English Form
+            </span>
+
+            <ArrowRight
+              size={18}
+              aria-hidden="true"
+            />
           </button>
         </div>
-        <p className="language-modal-note">Select your preferred language to continue registration.</p>
+
+        <p className="language-modal-note">
+          Select your preferred language
+          to continue registration.
+        </p>
       </div>
     </div>
   );
@@ -879,7 +1356,12 @@ function StepProgress({
   language: FormLanguage;
 }) {
   const t = FORM_TEXT[language];
-  const steps = [t.personalStep, t.achievementsStep, t.reviewStep];
+
+  const steps = [
+    t.personalStep,
+    t.achievementsStep,
+    t.reviewStep,
+  ];
 
   return (
     <div className="registration-progress">
@@ -888,22 +1370,38 @@ function StepProgress({
         const completed = number < step;
 
         return (
-          <div className="progress-group" key={number}>
+          <div
+            className="progress-group"
+            key={number}
+          >
             <div
               className={`progress-step ${
-                number === step ? "active" : ""
-              } ${completed ? "completed" : ""}`}
+                number === step
+                  ? "active"
+                  : ""
+              } ${
+                completed
+                  ? "completed"
+                  : ""
+              }`}
             >
               <div className="progress-circle">
-                {completed ? <Check size={16} /> : number}
+                {completed ? (
+                  <Check size={16} />
+                ) : (
+                  number
+                )}
               </div>
+
               <span>{label}</span>
             </div>
 
             {index < 2 && (
               <div
                 className={`progress-line ${
-                  completed ? "completed" : ""
+                  completed
+                    ? "completed"
+                    : ""
                 }`}
               />
             )}
@@ -927,8 +1425,13 @@ function FormField({
     <div className="form-field">
       <label>
         {label}
-        {required && <span className="required"> *</span>}
+        {required && (
+          <span className="required">
+            {" "}*
+          </span>
+        )}
       </label>
+
       {children}
     </div>
   );
@@ -950,7 +1453,7 @@ function ReviewItem({
 }
 
 // =====================================================
-// ACHIEVEMENT QUESTION: ONE ANSWER ONLY
+// ACHIEVEMENT QUESTION
 // =====================================================
 
 function AchievementQuestion({
@@ -970,15 +1473,22 @@ function AchievementQuestion({
   language: FormLanguage;
   onAnswer: (option: string) => void;
   onClear: () => void;
-  onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onFileChange: (
+    event: ChangeEvent<HTMLInputElement>
+  ) => void;
 }) {
   const t = FORM_TEXT[language];
-  const proofRequired = needsProof(question, answer);
+
+  const proofRequired =
+    needsProof(question, answer);
 
   return (
     <div className="achievement-question">
       <div className="achievement-question-title">
-        <span className="achievement-number">{number}</span>
+        <span className="achievement-number">
+          {number}
+        </span>
+
         <h4 lang={language}>
           {language === "ta"
             ? question.tamilQuestion
@@ -988,13 +1498,16 @@ function AchievementQuestion({
 
       <div className="achievement-options">
         {question.options.map((option) => {
-          const checked = answer === option;
+          const checked =
+            answer === option;
 
           return (
             <label
               key={option}
               className={`achievement-option ${
-                checked ? "is-selected" : ""
+                checked
+                  ? "is-selected"
+                  : ""
               }`}
             >
               <input
@@ -1002,9 +1515,17 @@ function AchievementQuestion({
                 name={`achievement-${question.id}`}
                 checked={checked}
                 value={option}
-                onChange={() => onAnswer(option)}
+                onChange={() =>
+                  onAnswer(option)
+                }
               />
-              <span>{optionLabel(option, language)}</span>
+
+              <span>
+                {optionLabel(
+                  option,
+                  language
+                )}
+              </span>
 
               {checked && (
                 <Check
@@ -1031,22 +1552,37 @@ function AchievementQuestion({
         <div className="achievement-proof">
           <div className="achievement-proof-heading">
             <FileCheck2 size={18} />
+
             <span>
               {language === "ta"
                 ? `${question.uploadLabel} — சான்றிதழ்`
                 : `Upload ${question.uploadLabel}`}
-              <span className="required"> *</span>
+              <span className="required">
+                {" "}*
+              </span>
             </span>
           </div>
 
           <label className="file-upload">
-            {proof ? <FileCheck2 /> : <UploadCloud />}
-            <span>{proof?.name || t.upload}</span>
-            <small>{t.uploadHint}</small>
+            {proof ? (
+              <FileCheck2 />
+            ) : (
+              <UploadCloud />
+            )}
+
+            <span>
+              {proof?.name || t.upload}
+            </span>
+
+            <small>
+              {t.uploadHint}
+            </small>
 
             {proof && (
               <small>
-                {(proof.size / 1048576).toFixed(2)} MB
+                {(
+                  proof.size / 1048576
+                ).toFixed(2)} MB
               </small>
             )}
 
@@ -1075,49 +1611,106 @@ function RegistrationPage({
   onSuccess: (id: string) => void;
   onBackHome: () => void;
   language: FormLanguage;
-  onLanguageChange: (value: FormLanguage) => void;
+  onLanguageChange: (
+    value: FormLanguage
+  ) => void;
 }) {
   const t = FORM_TEXT[language];
-  const [step, setStep] = useState<Step>(1);
-  const [showLanguagePopup, setShowLanguagePopup] = useState(true);
 
-  const [personal, setPersonal] = useState<PersonalInformation>(
+  const [step, setStep] =
+    useState<Step>(1);
+
+  const [
+    showLanguagePopup,
+    setShowLanguagePopup,
+  ] = useState(true);
+
+  const [
+    personal,
+    setPersonal,
+  ] = useState<PersonalInformation>(
     () => ({ ...EMPTY_PERSONAL })
   );
-  const [answers, setAnswers] = useState<Answers>(initialAnswers);
-  const [proofFiles, setProofFiles] = useState<ProofFiles>(
-    initialProofFiles
-  );
 
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [answers, setAnswers] =
+    useState<Answers>(initialAnswers);
 
-  const nationalPhone = getNationalPhone(personal.phone);
+  const [proofFiles, setProofFiles] =
+    useState<ProofFiles>(
+      initialProofFiles
+    );
 
-  function selectLanguage(next: FormLanguage) {
+  const [error, setError] =
+    useState("");
+
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false);
+
+  const [
+    submitStage,
+    setSubmitStage,
+  ] = useState<SubmitStage>("idle");
+
+  // Retained only while this registration form is mounted.
+  // Never stored in localStorage.
+  const pendingSubmissionRef =
+    useRef<PendingSubmission | null>(null);
+
+  // Blocks rapid repeated clicks before state has rendered.
+  const submittingRef = useRef(false);
+
+  const nationalPhone =
+    getNationalPhone(personal.phone);
+
+  function selectLanguage(
+    next: FormLanguage
+  ) {
     onLanguageChange(next);
     setShowLanguagePopup(false);
     setError("");
   }
 
-  function updatePersonal<K extends keyof PersonalInformation>(
+  function updatePersonal<
+    K extends keyof PersonalInformation
+  >(
     field: K,
     value: PersonalInformation[K]
   ) {
-    setPersonal((current) => ({ ...current, [field]: value }));
-    setError("");
-  }
-
-  function changePhone(event: ChangeEvent<HTMLInputElement>) {
-    const digits = event.target.value.replace(/\D/g, "").slice(0, UK_PHONE_LENGTH);
     setPersonal((current) => ({
       ...current,
-      phone: digits ? `${UK_DIAL_CODE}${digits}` : "",
+      [field]: value,
     }));
+
     setError("");
   }
 
-  function updateAnswer(q: QuestionDefinition, option: string) {
+  function changePhone(
+    event: ChangeEvent<HTMLInputElement>
+  ) {
+    const digits =
+      event.target.value
+        .replace(/\D/g, "")
+        .slice(
+          0,
+          UK_PHONE_LENGTH
+        );
+
+    setPersonal((current) => ({
+      ...current,
+      phone: digits
+        ? `${UK_DIAL_CODE}${digits}`
+        : "",
+    }));
+
+    setError("");
+  }
+
+  function updateAnswer(
+    q: QuestionDefinition,
+    option: string
+  ) {
     setAnswers((current) => ({
       ...current,
       [q.id]: option,
@@ -1127,10 +1720,13 @@ function RegistrationPage({
       ...current,
       [q.id]: null,
     }));
+
     setError("");
   }
 
-  function clearAnswer(questionId: string) {
+  function clearAnswer(
+    questionId: string
+  ) {
     setAnswers((current) => ({
       ...current,
       [questionId]: "",
@@ -1140,6 +1736,7 @@ function RegistrationPage({
       ...current,
       [questionId]: null,
     }));
+
     setError("");
   }
 
@@ -1147,19 +1744,28 @@ function RegistrationPage({
     questionId: string,
     event: ChangeEvent<HTMLInputElement>
   ) {
-    const file = event.target.files?.[0] ?? null;
+    const file =
+      event.target.files?.[0] ?? null;
+
     if (!file) return;
 
     if (
       !/\.(pdf|jpe?g|png)$/i.test(file.name) ||
-      !["application/pdf", "image/jpeg", "image/png"].includes(file.type)
+      ![
+        "application/pdf",
+        "image/jpeg",
+        "image/png",
+      ].includes(file.type)
     ) {
       setError(t.invalidFile);
       event.target.value = "";
       return;
     }
 
-    if (file.size === 0 || file.size > MAX_FILE_SIZE_BYTES) {
+    if (
+      file.size === 0 ||
+      file.size > MAX_FILE_SIZE_BYTES
+    ) {
       setError(t.fileSize);
       event.target.value = "";
       return;
@@ -1169,59 +1775,118 @@ function RegistrationPage({
       ...current,
       [questionId]: file,
     }));
+
     setError("");
   }
 
   function validatePersonal(): string {
-    if (personal.fullName.trim().length < 3) return t.invalidName;
-    if (!validDOB(personal.dob)) return t.invalidDob;
+    if (
+      personal.fullName.trim().length < 3 ||
+      personal.fullName.trim().length > 150
+    ) {
+      return t.invalidName;
+    }
 
-    if (!["Male", "Female"].includes(personal.gender)) {
+    if (!validDOB(personal.dob)) {
+      return t.invalidDob;
+    }
+
+    if (
+      !["Male", "Female"].includes(
+        personal.gender
+      )
+    ) {
       return t.invalidGender;
     }
 
     if (!validPhone(personal)) {
-      return `${t.invalidPhone} (${UK_DIAL_CODE}, ${UK_PHONE_LENGTH} digits)`;
+      return (
+        `${t.invalidPhone} ` +
+        `(${UK_DIAL_CODE}, ` +
+        `${UK_PHONE_LENGTH} digits)`
+      );
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personal.email.trim())) {
+    if (
+      personal.email.trim().length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        personal.email.trim()
+      )
+    ) {
       return t.invalidEmail;
     }
-    if (personal.address.trim().length < 8) return t.invalidAddress;
+
+    if (
+      personal.address.trim().length < 8 ||
+      personal.address.trim().length > 1000
+    ) {
+      return t.invalidAddress;
+    }
+
     return "";
   }
 
   function validateAchievements(): string {
-    // Every question is optional.
-    // Proof becomes mandatory only after a qualifying answer.
+    // All questions are optional.
+    // A positive answer requires a real file.
+
     for (const q of QUESTIONS) {
-      const answer = answers[q.id] || "";
+      const answer =
+        answers[q.id] || "";
+
       if (!answer) continue;
 
-      if (!q.options.includes(answer)) return t.invalidAnswer;
+      if (
+        !q.options.includes(answer)
+      ) {
+        return t.invalidAnswer;
+      }
 
-      if (needsProof(q, answer)) {
-        const proof = proofFiles[q.id];
-        if (!proof) return `${t.missingProof} (${q.id})`;
-        if (!validProof(proof)) return t.invalidFile;
+      if (
+        needsProof(q, answer)
+      ) {
+        const proof =
+          proofFiles[q.id];
+
+        if (!proof) {
+          return (
+            `${t.missingProof} ` +
+            `(${q.id})`
+          );
+        }
+
+        if (!validProof(proof)) {
+          return t.invalidFile;
+        }
       }
     }
+
     return "";
   }
 
   function scrollToTop() {
-    const container = document.querySelector(
-      ".registration-main-scroll"
-    );
+    const container =
+      document.querySelector(
+        ".registration-main-scroll"
+      );
 
-    if (container instanceof HTMLElement) {
-      container.scrollTo({ top: 0, behavior: "instant" });
+    if (
+      container instanceof HTMLElement
+    ) {
+      container.scrollTo({
+        top: 0,
+        behavior: "instant",
+      });
     }
   }
 
   function nextStep() {
+    if (submittingRef.current) return;
+
     const problem =
-      step === 1 ? validatePersonal() : validateAchievements();
+      step === 1
+        ? validatePersonal()
+        : validateAchievements();
 
     if (problem) {
       setError(problem);
@@ -1229,20 +1894,48 @@ function RegistrationPage({
     }
 
     setError("");
-    setStep((current) => Math.min(3, current + 1) as Step);
+
+    setStep(
+      (current) =>
+        Math.min(3, current + 1) as Step
+    );
+
     scrollToTop();
   }
 
   function previousStep() {
+    if (submittingRef.current) return;
+
     setError("");
-    setStep((current) => Math.max(1, current - 1) as Step);
+
+    setStep(
+      (current) =>
+        Math.max(1, current - 1) as Step
+    );
+
     scrollToTop();
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  // ===================================================
+  // REAL BACKEND SUBMISSION
+  // ===================================================
+
+  async function submit(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
-    const problem = validatePersonal() || validateAchievements();
+    if (
+      submittingRef.current ||
+      submitting
+    ) {
+      return;
+    }
+
+    const problem =
+      validatePersonal() ||
+      validateAchievements();
+
     if (problem) {
       setError(problem);
       return;
@@ -1253,53 +1946,256 @@ function RegistrationPage({
       return;
     }
 
-    if (submitting) return;
+    // Match the backend registration deadline.
+    if (
+      Date.now() >
+      Date.parse(EVENT.registrationClosesAt)
+    ) {
+      setError(t.closed);
+      return;
+    }
+
+    submittingRef.current = true;
     setSubmitting(true);
+    setSubmitStage("saving");
     setError("");
 
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed: unknown = raw ? JSON.parse(raw) : [];
-      const saved: SavedRegistration[] = Array.isArray(parsed)
-        ? parsed
-        : [];
-
-      const documents: Record<string, string | null> = {};
-
-      QUESTIONS.forEach((q) => {
-        const answer = answers[q.id] || "";
-        documents[q.id] = needsProof(q, answer)
-          ? proofFiles[q.id]?.name || null
-          : null;
-      });
-
-      const id = generateId();
-
-      const registration: SavedRegistration = {
-        id,
-        createdAt: new Date().toISOString(),
-        event: EVENT.title,
-        personal: {
-          ...personal,
-          fullName: personal.fullName.trim(),
-          email: personal.email.trim(),
-          address: personal.address.trim(),
-        },
-        answers: { ...answers },
-        documents,
+      const normalizedPersonal = {
+        fullName: personal.fullName.trim(),
+        dob: personal.dob,
+        gender: personal.gender as
+          "Male" | "Female",
+        phone: personal.phone,
+        email:
+          personal.email
+            .trim()
+            .toLowerCase(),
+        address: personal.address.trim(),
+        agreed: true,
       };
 
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify([...saved, registration])
-      );
+      const normalizedAnswers: Answers =
+        Object.fromEntries(
+          QUESTIONS.map((q) => [
+            q.id,
+            answers[q.id] || "",
+          ])
+        );
 
-      onSuccess(id);
-    } catch {
-      setError(t.saveFailed);
+      const fingerprint =
+        getSubmissionFingerprint(
+          personal,
+          normalizedAnswers,
+          proofFiles,
+          language
+        );
+
+      let pending =
+        pendingSubmissionRef.current;
+
+      // Reuse a pending application after an upload error.
+      // Only reuse it for exactly the same form data.
+      if (
+        !pending ||
+        pending.fingerprint !== fingerprint ||
+        Date.parse(pending.expiresAt) <= Date.now()
+      ) {
+        pending = null;
+        pendingSubmissionRef.current = null;
+
+        const start =
+          await apiRequest<StartRegistrationResponse>(
+            "/api/registrations/start",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+              body: JSON.stringify({
+                personal: normalizedPersonal,
+                language,
+                answers: normalizedAnswers,
+              }),
+            }
+          );
+
+        if (
+          !start.success ||
+          !start.registrationId ||
+          !start.uploadToken
+        ) {
+          throw new Error(t.saveFailed);
+        }
+
+        pending = {
+          fingerprint,
+          registrationId:
+            start.registrationId,
+          uploadToken:
+            start.uploadToken,
+          expiresAt:
+            start.expiresAt,
+          requiredDocuments:
+            start.requiredDocuments,
+          uploadedDocuments:
+            new Set<string>(),
+        };
+
+        pendingSubmissionRef.current =
+          pending;
+      }
+
+      // Each certificate is uploaded to private R2
+      // through the existing backend API.
+      for (
+        const questionId of
+        pending.requiredDocuments
+      ) {
+        if (
+          pending.uploadedDocuments.has(
+            questionId
+          )
+        ) {
+          continue;
+        }
+
+        const file =
+          proofFiles[questionId];
+
+        if (!file) {
+          throw new Error(
+            `${t.missingProof} (${questionId})`
+          );
+        }
+
+        if (!validProof(file)) {
+          throw new Error(t.invalidFile);
+        }
+
+        setSubmitStage("uploading");
+
+        const formData = new FormData();
+        formData.append(
+          "file",
+          file,
+          file.name
+        );
+
+        const upload =
+          await apiRequest<UploadDocumentResponse>(
+            `/api/registrations/${encodeURIComponent(
+              pending.registrationId
+            )}/documents/${encodeURIComponent(
+              questionId
+            )}`,
+            {
+              method: "POST",
+              headers: {
+                Authorization:
+                  `Bearer ${pending.uploadToken}`,
+              },
+              body: formData,
+            }
+          );
+
+        if (!upload.success) {
+          throw new Error(
+            upload.message ||
+              t.saveFailed
+          );
+        }
+
+        pending.uploadedDocuments.add(
+          questionId
+        );
+      }
+
+      // Complete registration ONLY after all
+      // certificates have uploaded successfully.
+      setSubmitStage("finalizing");
+
+      const completed =
+        await apiRequest<CompleteRegistrationResponse>(
+          `/api/registrations/${encodeURIComponent(
+            pending.registrationId
+          )}/complete`,
+          {
+            method: "POST",
+            headers: {
+              Authorization:
+                `Bearer ${pending.uploadToken}`,
+            },
+          }
+        );
+
+      if (
+        !completed.success ||
+        completed.status !== "submitted" ||
+        !completed.registrationId
+      ) {
+        throw new Error(t.saveFailed);
+      }
+
+      // Successful ID comes from the server.
+      // The frontend no longer generates registration IDs.
+      pendingSubmissionRef.current = null;
+
+      onSuccess(
+        completed.registrationId
+      );
+    } catch (error) {
+      // A pending application remains available
+      // for retry if the same form is submitted again.
+      // An expired token is discarded.
+      if (
+        error instanceof RegistrationApiError &&
+        (error.status === 401 ||
+          error.status === 409)
+      ) {
+        pendingSubmissionRef.current =
+          null;
+      }
+
+      const message =
+        getApiErrorMessage(
+          error,
+          language
+        );
+
+      setError(message);
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
+      setSubmitStage("idle");
     }
+  }
+
+  function submitButtonLabel(): string {
+    if (!submitting) {
+      return t.submit;
+    }
+
+    if (
+      submitStage === "saving"
+    ) {
+      return t.savingRegistration;
+    }
+
+    if (
+      submitStage === "uploading"
+    ) {
+      return t.uploadingDocuments;
+    }
+
+    if (
+      submitStage === "finalizing"
+    ) {
+      return t.finalizingRegistration;
+    }
+
+    return t.submitting;
   }
 
   return (
@@ -1313,43 +2209,73 @@ function RegistrationPage({
 
       <div className="registration-main">
         <div className="registration-intro">
-          <h1>Winter Get Together</h1>
-          <h2 lang="ta">{EVENT.tamil}</h2>
+          <h1>
+            Winter Get Together
+          </h1>
+
+          <h2 lang="ta">
+            {EVENT.tamil}
+          </h2>
+
           <div className="registration-heading-line" />
+
           <h3>{t.pageTitle}</h3>
           <p>{t.subtitle}</p>
         </div>
 
-        <StepProgress step={step} language={language} />
+        <StepProgress
+          step={step}
+          language={language}
+        />
 
         <form
           className="registration-form"
           onSubmit={submit}
           noValidate
+          aria-busy={submitting}
         >
           <div className="registration-card">
-            {/* STEP 1: PERSONAL DETAILS */}
+            {/* ===================================
+                STEP 1 - PERSONAL INFORMATION
+            =================================== */}
+
             {step === 1 && (
               <>
                 <div className="card-heading">
                   <UserRound />
-                  <h3>{t.personalTitle}</h3>
+
+                  <h3>
+                    {t.personalTitle}
+                  </h3>
                 </div>
 
                 <div className="fields-grid">
-                  <FormField label={t.fullName} required>
+                  <FormField
+                    label={t.fullName}
+                    required
+                  >
                     <input
                       type="text"
                       autoComplete="name"
-                      placeholder={t.namePlaceholder}
-                      value={personal.fullName}
+                      placeholder={
+                        t.namePlaceholder
+                      }
+                      value={
+                        personal.fullName
+                      }
                       onChange={(e) =>
-                        updatePersonal("fullName", e.target.value)
+                        updatePersonal(
+                          "fullName",
+                          e.target.value
+                        )
                       }
                     />
                   </FormField>
 
-                  <FormField label={t.dob} required>
+                  <FormField
+                    label={t.dob}
+                    required
+                  >
                     <input
                       type="date"
                       max={todayLocal()}
@@ -1357,36 +2283,63 @@ function RegistrationPage({
                       onChange={(e) =>
                         updatePersonal(
                           "dob",
-                          e.target.value <= todayLocal()
+                          e.target.value <=
+                            todayLocal()
                             ? e.target.value
                             : ""
                         )
                       }
                     />
-                    <small className="field-help">{t.dobHint}</small>
+
+                    <small className="field-help">
+                      {t.dobHint}
+                    </small>
                   </FormField>
 
-                  <FormField label={t.gender} required>
+                  <FormField
+                    label={t.gender}
+                    required
+                  >
                     <div className="select-control">
                       <select
-                        value={personal.gender}
+                        value={
+                          personal.gender
+                        }
                         onChange={(e) =>
-                          updatePersonal("gender", e.target.value)
+                          updatePersonal(
+                            "gender",
+                            e.target.value
+                          )
                         }
                       >
-                        <option value="">{t.selectGender}</option>
-                        <option value="Male">{t.male}</option>
-                        <option value="Female">{t.female}</option>
+                        <option value="">
+                          {t.selectGender}
+                        </option>
+
+                        <option value="Male">
+                          {t.male}
+                        </option>
+
+                        <option value="Female">
+                          {t.female}
+                        </option>
                       </select>
                     </div>
                   </FormField>
 
-                  <FormField label={t.phone} required>
+                  <FormField
+                    label={t.phone}
+                    required
+                  >
                     <div className="international-phone-wrapper">
                       <span
                         className="phone-country-select"
                         aria-label="United Kingdom calling code +44"
-                        style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
                       >
                         🇬🇧 +44
                       </span>
@@ -1395,31 +2348,54 @@ function RegistrationPage({
                         type="tel"
                         inputMode="numeric"
                         autoComplete="tel-national"
-                        placeholder={UK_PHONE_PLACEHOLDER}
-                        maxLength={UK_PHONE_LENGTH}
-                        value={nationalPhone}
-                        onChange={changePhone}
+                        placeholder={
+                          UK_PHONE_PLACEHOLDER
+                        }
+                        maxLength={
+                          UK_PHONE_LENGTH
+                        }
+                        value={
+                          nationalPhone
+                        }
+                        onChange={
+                          changePhone
+                        }
                         aria-label={t.phone}
                       />
                     </div>
 
                     <small className="uk-phone-hint">
-                      {UK_DIAL_CODE} — {UK_PHONE_LENGTH}{" "}
-                      {language === "ta" ? "இலக்கங்கள்" : "digits"}
+                      {UK_DIAL_CODE}
+                      {" — "}
+                      {UK_PHONE_LENGTH}
+                      {" "}
+                      {language === "ta"
+                        ? "இலக்கங்கள்"
+                        : "digits"}
                     </small>
                   </FormField>
 
                   <div className="grid-full">
-                    <FormField label={t.email} required>
+                    <FormField
+                      label={t.email}
+                      required
+                    >
                       <input
                         type="email"
                         inputMode="email"
                         autoComplete="email"
                         maxLength={254}
-                        placeholder={t.emailPlaceholder}
-                        value={personal.email}
+                        placeholder={
+                          t.emailPlaceholder
+                        }
+                        value={
+                          personal.email
+                        }
                         onChange={(e) =>
-                          updatePersonal("email", e.target.value)
+                          updatePersonal(
+                            "email",
+                            e.target.value
+                          )
                         }
                         aria-label={t.email}
                       />
@@ -1427,14 +2403,24 @@ function RegistrationPage({
                   </div>
 
                   <div className="grid-full">
-                    <FormField label={t.address} required>
+                    <FormField
+                      label={t.address}
+                      required
+                    >
                       <textarea
                         rows={3}
                         autoComplete="street-address"
-                        placeholder={t.addressPlaceholder}
-                        value={personal.address}
+                        placeholder={
+                          t.addressPlaceholder
+                        }
+                        value={
+                          personal.address
+                        }
                         onChange={(e) =>
-                          updatePersonal("address", e.target.value)
+                          updatePersonal(
+                            "address",
+                            e.target.value
+                          )
                         }
                       />
                     </FormField>
@@ -1443,12 +2429,18 @@ function RegistrationPage({
               </>
             )}
 
-            {/* STEP 2: ACHIEVEMENTS */}
+            {/* ===================================
+                STEP 2 - ACHIEVEMENTS
+            =================================== */}
+
             {step === 2 && (
               <>
                 <div className="card-heading">
                   <GraduationCap />
-                  <h3>{t.achievementsTitle}</h3>
+
+                  <h3>
+                    {t.achievementsTitle}
+                  </h3>
                 </div>
 
                 <p className="achievement-introduction">
@@ -1456,140 +2448,227 @@ function RegistrationPage({
                 </p>
 
                 <div className="achievement-question-list">
-                  {QUESTIONS.map((q, index) => (
-                    <AchievementQuestion
-                      key={q.id}
-                      number={index + 1}
-                      question={q}
-                      language={language}
-                      answer={answers[q.id] || ""}
-                      proof={proofFiles[q.id] || null}
-                      onAnswer={(option) =>
-                        updateAnswer(q, option)
-                      }
-                      onClear={() => clearAnswer(q.id)}
-                      onFileChange={(e) => handleProof(q.id, e)}
-                    />
-                  ))}
+                  {QUESTIONS.map(
+                    (q, index) => (
+                      <AchievementQuestion
+                        key={q.id}
+                        number={index + 1}
+                        question={q}
+                        language={language}
+                        answer={
+                          answers[q.id] ||
+                          ""
+                        }
+                        proof={
+                          proofFiles[q.id] ||
+                          null
+                        }
+                        onAnswer={(option) =>
+                          updateAnswer(
+                            q,
+                            option
+                          )
+                        }
+                        onClear={() =>
+                          clearAnswer(q.id)
+                        }
+                        onFileChange={(e) =>
+                          handleProof(q.id, e)
+                        }
+                      />
+                    )
+                  )}
                 </div>
               </>
             )}
 
-            {/* STEP 3: REVIEW */}
+            {/* ===================================
+                STEP 3 - REVIEW
+            =================================== */}
+
             {step === 3 && (
               <>
                 <div className="card-heading">
                   <ShieldCheck />
-                  <h3>{t.reviewTitle}</h3>
+
+                  <h3>
+                    {t.reviewTitle}
+                  </h3>
                 </div>
 
                 <div className="review-section">
-                  <h4>{t.reviewPersonal}</h4>
+                  <h4>
+                    {t.reviewPersonal}
+                  </h4>
 
                   <div className="review-grid">
                     <ReviewItem
                       label={t.fullName}
-                      value={personal.fullName}
+                      value={
+                        personal.fullName
+                      }
                     />
+
                     <ReviewItem
                       label={t.dob}
                       value={personal.dob}
                     />
+
                     <ReviewItem
                       label={t.gender}
                       value={
-                        personal.gender === "Male"
+                        personal.gender ===
+                        "Male"
                           ? t.male
-                          : personal.gender === "Female"
+                          : personal.gender ===
+                              "Female"
                             ? t.female
                             : ""
                       }
                     />
+
                     <ReviewItem
                       label={t.phone}
-                      value={personal.phone}
+                      value={
+                        personal.phone
+                      }
                     />
+
                     <ReviewItem
                       label={t.email}
-                      value={personal.email}
+                      value={
+                        personal.email
+                      }
                     />
+
                     <ReviewItem
                       label={t.address}
-                      value={personal.address}
+                      value={
+                        personal.address
+                      }
                     />
                   </div>
                 </div>
 
                 <div className="review-section">
-                  <h4>{t.reviewAchievements}</h4>
+                  <h4>
+                    {t.reviewAchievements}
+                  </h4>
 
                   <div className="achievement-review-list">
-                    {QUESTIONS.map((q, index) => {
-                      const answer = answers[q.id] || "";
-                      const file = proofFiles[q.id];
+                    {QUESTIONS.map(
+                      (q, index) => {
+                        const answer =
+                          answers[q.id] ||
+                          "";
 
-                      return (
-                        <div
-                          key={q.id}
-                          className="achievement-review-item"
-                        >
-                          <p lang={language}>
-                            <strong>{index + 1}.</strong>{" "}
-                            {language === "ta"
-                              ? q.tamilQuestion
-                              : q.englishQuestion}
-                          </p>
+                        const file =
+                          proofFiles[q.id];
 
-                          <div className="achievement-review-answer">
-                            <span>{t.answer}:</span>
-                            <strong>
-                              {answer
-                                ? optionLabel(answer, language)
-                                : t.notSelected}
-                            </strong>
-                          </div>
+                        return (
+                          <div
+                            key={q.id}
+                            className="achievement-review-item"
+                          >
+                            <p lang={language}>
+                              <strong>
+                                {index + 1}.
+                              </strong>
+                              {" "}
+                              {language ===
+                              "ta"
+                                ? q.tamilQuestion
+                                : q.englishQuestion}
+                            </p>
 
-                          {needsProof(q, answer) && file && (
-                            <div className="achievement-review-proof">
-                              <FileCheck2 size={16} />
-                              <span>{file.name}</span>
-                              <small>
-                                ({(file.size / 1048576).toFixed(2)} MB)
-                              </small>
+                            <div className="achievement-review-answer">
+                              <span>
+                                {t.answer}:
+                              </span>
+
+                              <strong>
+                                {answer
+                                  ? optionLabel(
+                                      answer,
+                                      language
+                                    )
+                                  : t.notSelected}
+                              </strong>
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
+
+                            {needsProof(
+                              q,
+                              answer
+                            ) &&
+                              file && (
+                                <div className="achievement-review-proof">
+                                  <FileCheck2
+                                    size={16}
+                                  />
+
+                                  <span>
+                                    {file.name}
+                                  </span>
+
+                                  <small>
+                                    (
+                                    {(
+                                      file.size /
+                                      1048576
+                                    ).toFixed(2)}
+                                    {" MB)"}
+                                  </small>
+                                </div>
+                              )}
+                          </div>
+                        );
+                      }
+                    )}
                   </div>
                 </div>
 
                 <label className="confirmation">
                   <input
                     type="checkbox"
-                    checked={personal.agreed}
+                    checked={
+                      personal.agreed
+                    }
                     onChange={(e) =>
-                      updatePersonal("agreed", e.target.checked)
+                      updatePersonal(
+                        "agreed",
+                        e.target.checked
+                      )
                     }
                   />
+
                   {t.confirmation}
                 </label>
               </>
             )}
 
             {error && (
-              <div className="form-error" role="alert">
+              <div
+                className="form-error"
+                role="alert"
+              >
                 {error}
               </div>
             )}
           </div>
+
+          {/* ===================================
+              NAVIGATION BUTTONS
+          =================================== */}
 
           <div className="form-bottom-actions">
             {step > 1 ? (
               <button
                 type="button"
                 className="back-button"
-                onClick={previousStep}
+                disabled={submitting}
+                onClick={
+                  previousStep
+                }
               >
                 <ArrowLeft size={17} />
                 {t.previous}
@@ -1598,7 +2677,10 @@ function RegistrationPage({
               <button
                 type="button"
                 className="back-button"
-                onClick={onBackHome}
+                disabled={submitting}
+                onClick={
+                  onBackHome
+                }
               >
                 <ArrowLeft size={17} />
                 {t.home}
@@ -1609,7 +2691,10 @@ function RegistrationPage({
               <button
                 type="button"
                 className="form-next-button"
-                onClick={nextStep}
+                disabled={submitting}
+                onClick={
+                  nextStep
+                }
               >
                 {t.next}
                 <ArrowRight size={17} />
@@ -1620,7 +2705,7 @@ function RegistrationPage({
                 className="form-next-button"
                 disabled={submitting}
               >
-                {submitting ? t.submitting : t.submit}
+                {submitButtonLabel()}
                 <CheckCircle2 size={18} />
               </button>
             )}
@@ -1629,16 +2714,22 @@ function RegistrationPage({
       </div>
 
       <WinterWave />
-      <style>{LANGUAGE_POPUP_STYLES}</style>
+
+      <style>
+        {LANGUAGE_POPUP_STYLES}
+      </style>
+
       {showLanguagePopup && (
-        <LanguageSelectionModal onSelect={selectLanguage} />
+        <LanguageSelectionModal
+          onSelect={selectLanguage}
+        />
       )}
     </section>
   );
 }
 
 // =====================================================
-// SUCCESS PAGE - BILINGUAL
+// SUCCESS PAGE - PRESERVED
 // =====================================================
 
 function SuccessPage({
@@ -1650,12 +2741,17 @@ function SuccessPage({
   language: FormLanguage;
   onHome: () => void;
 }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] =
+    useState(false);
+
   const t = FORM_TEXT[language];
 
   async function copyId() {
     try {
-      await navigator.clipboard.writeText(id);
+      await navigator.clipboard.writeText(
+        id
+      );
+
       setCopied(true);
     } catch {
       setCopied(false);
@@ -1663,42 +2759,74 @@ function SuccessPage({
   }
 
   return (
-    <section className="winter-screen success-screen" lang={language}>
+    <section
+      className="winter-screen success-screen"
+      lang={language}
+    >
       <WinterBackground light />
 
       <div className="success-container">
         <div className="success-icon-outer">
           <div className="success-icon">
-            <Check size={56} strokeWidth={3.5} />
+            <Check
+              size={56}
+              strokeWidth={3.5}
+            />
           </div>
         </div>
 
-        <h1>{t.success}</h1>
-        <p>{t.thankYou}</p>
+        <h1>
+          {t.success}
+        </h1>
+
+        <p>
+          {t.thankYou}
+        </p>
 
         <div className="success-reference">
-          <span>{t.registrationId}</span>
+          <span>
+            {t.registrationId}
+          </span>
+
           <div>
-            <strong>{id}</strong>
+            <strong>
+              {id}
+            </strong>
+
             <button
               type="button"
               onClick={copyId}
               aria-label={t.copy}
             >
-              {copied ? <Check size={20} /> : <Copy size={20} />}
+              {copied ? (
+                <Check size={20} />
+              ) : (
+                <Copy size={20} />
+              )}
             </button>
           </div>
-          {copied && <small>{t.copied}</small>}
+
+          {copied && (
+            <small>
+              {t.copied}
+            </small>
+          )}
         </div>
 
-        <p className="reference-note">{t.saveReference}</p>
+        <p className="reference-note">
+          {t.saveReference}
+        </p>
 
         <button
           type="button"
           className="success-home-button"
           onClick={onHome}
         >
-          <Home size={18} fill="currentColor" />
+          <Home
+            size={18}
+            fill="currentColor"
+          />
+
           {t.backHome}
         </button>
       </div>
@@ -1709,24 +2837,48 @@ function SuccessPage({
 }
 
 // =====================================================
-// MAIN APP
+// MAIN APP - PRESERVED
 // =====================================================
 
 export default function App() {
-  const [page, setPage] = useState<Page>("home");
-  const [language, setLanguage] = useState<FormLanguage>("ta");
-  const [registrationId, setRegistrationId] = useState("");
-  const [formKey, setFormKey] = useState(0);
+  const [page, setPage] =
+    useState<Page>("home");
 
-  function navigate(nextPage: Page) {
-    if (nextPage === "register" && page !== "register") {
+  const [
+    language,
+    setLanguage,
+  ] = useState<FormLanguage>("ta");
+
+  const [
+    registrationId,
+    setRegistrationId,
+  ] = useState("");
+
+  const [
+    formKey,
+    setFormKey,
+  ] = useState(0);
+
+  function navigate(
+    nextPage: Page
+  ) {
+    if (
+      nextPage === "register" &&
+      page !== "register"
+    ) {
       setLanguage("ta");
-      setFormKey((current) => current + 1);
+
+      setFormKey(
+        (current) => current + 1
+      );
     }
+
     setPage(nextPage);
   }
 
-  function handleSuccess(id: string) {
+  function handleSuccess(
+    id: string
+  ) {
     setRegistrationId(id);
     setPage("success");
   }
@@ -1735,23 +2887,40 @@ export default function App() {
     <div className="app-shell">
       <main
         className={`app-main ${
-          page === "register" ? "registration-main-scroll" : ""
+          page === "register"
+            ? "registration-main-scroll"
+            : ""
         }`}
       >
         {page === "home" && (
-          <HomePage onRegister={() => navigate("register")} />
+          <HomePage
+            onRegister={() =>
+              navigate("register")
+            }
+          />
         )}
 
-        {page === "about" && <AboutPage />}
-        {page === "contact" && <ContactPage />}
+        {page === "about" && (
+          <AboutPage />
+        )}
+
+        {page === "contact" && (
+          <ContactPage />
+        )}
 
         {page === "register" && (
           <RegistrationPage
             key={formKey}
             language={language}
-            onLanguageChange={setLanguage}
-            onSuccess={handleSuccess}
-            onBackHome={() => navigate("home")}
+            onLanguageChange={
+              setLanguage
+            }
+            onSuccess={
+              handleSuccess
+            }
+            onBackHome={() =>
+              navigate("home")
+            }
           />
         )}
 
@@ -1759,7 +2928,9 @@ export default function App() {
           <SuccessPage
             id={registrationId}
             language={language}
-            onHome={() => navigate("home")}
+            onHome={() =>
+              navigate("home")
+            }
           />
         )}
       </main>

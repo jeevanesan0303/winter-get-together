@@ -1,0 +1,23 @@
+{
+  "name": "winter-get-together-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "cf-types": "wrangler types",
+    "db:migrate:local": "wrangler d1 migrations apply winter-get-together-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply winter-get-together-db --remote"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "wrangler": "^4.0.0"
+  },
+  "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
+    "pdf-lib": "^1.17.1",
+    "regenerator-runtime": "^0.14.1"
+  }
+}

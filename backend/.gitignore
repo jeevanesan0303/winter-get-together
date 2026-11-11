@@ -1,0 +1,4 @@
+.dev.vars
+.dev.vars.*
+backend/.dev.vars
+backend/.dev.vars.*
