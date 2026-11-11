@@ -1299,21 +1299,41 @@ export async function handleAdminRoute(
         .bind(email)
         .first<AdminUser>();
 
-    let validPassword =
-      false;
+   
+let validPassword = false;
 
-    if (admin) {
-      try {
-        validPassword =
-          await checkPassword(
-            password,
-            admin.password_hash
-          );
-      } catch {
-        validPassword =
-          false;
-      }
-    }
+if (admin) {
+  try {
+    validPassword = await checkPassword(
+      password,
+      admin.password_hash
+    );
+
+    console.info("Admin login verification:", {
+      accountFound: true,
+      verificationCompleted: true,
+      passwordMatched: validPassword,
+    });
+  } catch (error) {
+    console.error("Admin login verification failed:", {
+      errorName:
+        error instanceof Error
+          ? error.name
+          : "UnknownError",
+      errorMessage:
+        error instanceof Error
+          ? error.message
+          : "Verification exception",
+    });
+
+    validPassword = false;
+  }
+} else {
+  console.warn("Admin login verification:", {
+    accountFound: false,
+  });
+}
+
 
     if (
       !admin ||
