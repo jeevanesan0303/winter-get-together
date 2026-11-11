@@ -34,7 +34,7 @@ if (!displayName || displayName.length > 100) {
 }
 
 const salt = randomBytes(16);
-const iterations = 210000;
+const iterations = 100000;
 
 const hash = pbkdf2Sync(
   password,
@@ -122,4 +122,5 @@ if (result.status !== 0) {
 console.log("Production administrator created successfully.");
 console.log(`Admin email: ${email}`);
 console.log(`Admin name: ${displayName}`);
+
 

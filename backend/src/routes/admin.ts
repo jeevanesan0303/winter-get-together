@@ -1,4 +1,4 @@
-
+﻿
 import {
   PDFDocument,
   StandardFonts,
@@ -104,80 +104,80 @@ const QUESTIONS = [
     id: "tamil_exam",
     label: "Tamil Examination",
     english: "Have you achieved Excellent or Very Good in the Tamil examination conducted by the Tamil Development Council?",
-    tamil: "தமிழ் மேம்பாட்டுப் பேரவையின் தமிழ்ப் பரீட்சையில் Excellent அல்லது Very Good பெற்றுள்ளீர்களா?",
+    tamil: "à®¤à®®à®¿à®´à¯ à®®à¯‡à®®à¯à®ªà®¾à®Ÿà¯à®Ÿà¯à®ªà¯ à®ªà¯‡à®°à®µà¯ˆà®¯à®¿à®©à¯ à®¤à®®à®¿à®´à¯à®ªà¯ à®ªà®°à¯€à®Ÿà¯à®šà¯ˆà®¯à®¿à®²à¯ Excellent à®…à®²à¯à®²à®¤à¯ Very Good à®ªà¯†à®±à¯à®±à¯à®³à¯à®³à¯€à®°à¯à®•à®³à®¾?",
   },
   {
     id: "maths_competition",
     label: "Chithambara Mathematics Competition",
     english: "Have you achieved Grade A or A* in the Chithambara Mathematics Competition?",
-    tamil: "சிதம்பரக் கணிதப் போட்டியில் A அல்லது A* தரத்தைப் பெற்றுள்ளீர்களா?",
+    tamil: "à®šà®¿à®¤à®®à¯à®ªà®°à®•à¯ à®•à®£à®¿à®¤à®ªà¯ à®ªà¯‹à®Ÿà¯à®Ÿà®¿à®¯à®¿à®²à¯ A à®…à®²à¯à®²à®¤à¯ A* à®¤à®°à®¤à¯à®¤à¯ˆà®ªà¯ à®ªà¯†à®±à¯à®±à¯à®³à¯à®³à¯€à®°à¯à®•à®³à®¾?",
   },
   {
     id: "grammar_school",
     label: "Grammar School Examination",
     english: "Have you passed the Grammar School entrance examination?",
-    tamil: "Grammar School தேர்வில் தேர்ச்சி பெற்றுள்ளீர்களா?",
+    tamil: "Grammar School à®¤à¯‡à®°à¯à®µà®¿à®²à¯ à®¤à¯‡à®°à¯à®šà¯à®šà®¿ à®ªà¯†à®±à¯à®±à¯à®³à¯à®³à¯€à®°à¯à®•à®³à®¾?",
   },
   {
     id: "gcse",
     label: "GCSE Examination",
     english: "Have you achieved at least five A grades (New Grade 5 Seven) in your GCSE examinations?",
-    tamil: "GCSE பரீட்சையில் குறைந்தபட்சம் 5A (New Grade 5 Seven) பெற்றுள்ளீர்களா?",
+    tamil: "GCSE à®ªà®°à¯€à®Ÿà¯à®šà¯ˆà®¯à®¿à®²à¯ à®•à¯à®±à¯ˆà®¨à¯à®¤à®ªà®Ÿà¯à®šà®®à¯ 5A (New Grade 5 Seven) à®ªà¯†à®±à¯à®±à¯à®³à¯à®³à¯€à®°à¯à®•à®³à®¾?",
   },
   {
     id: "gce_al",
     label: "GCE A-Level",
     english: "Have you achieved Grade A or B in your GCE A-Level examinations?",
-    tamil: "GCE A/L பரீட்சையில் A, B பெறுபேறுகளைப் பெற்றுள்ளீர்களா?",
+    tamil: "GCE A/L à®ªà®°à¯€à®Ÿà¯à®šà¯ˆà®¯à®¿à®²à¯ A, B à®ªà¯†à®±à¯à®ªà¯‡à®±à¯à®•à®³à¯ˆà®ªà¯ à®ªà¯†à®±à¯à®±à¯à®³à¯à®³à¯€à®°à¯à®•à®³à®¾?",
   },
   {
     id: "university_degree",
     label: "University Degree",
     english: "Have you obtained a university degree?",
-    tamil: "பல்கலைக்கழகத்தில் பட்டம் பெற்றுள்ளீர்களா?",
+    tamil: "à®ªà®²à¯à®•à®²à¯ˆà®•à¯à®•à®´à®•à®¤à¯à®¤à®¿à®²à¯ à®ªà®Ÿà¯à®Ÿà®®à¯ à®ªà¯†à®±à¯à®±à¯à®³à¯à®³à¯€à®°à¯à®•à®³à®¾?",
   },
   {
     id: "other_achievements",
     label: "Arts, Culture & Sports Achievements",
     english: "Have you received any awards, prizes or achievements in arts, culture or sports?",
-    tamil: "கலை, கலாசாரம் மற்றும் விளையாட்டுத் துறைகளில் சாதனைகள் அல்லது பரிசுகள் பெற்றுள்ளீர்களா?",
+    tamil: "à®•à®²à¯ˆ, à®•à®²à®¾à®šà®¾à®°à®®à¯ à®®à®±à¯à®±à¯à®®à¯ à®µà®¿à®³à¯ˆà®¯à®¾à®Ÿà¯à®Ÿà¯à®¤à¯ à®¤à¯à®±à¯ˆà®•à®³à®¿à®²à¯ à®šà®¾à®¤à®©à¯ˆà®•à®³à¯ à®…à®²à¯à®²à®¤à¯ à®ªà®°à®¿à®šà¯à®•à®³à¯ à®ªà¯†à®±à¯à®±à¯à®³à¯à®³à¯€à®°à¯à®•à®³à®¾?",
   },
 ] as const;
 
 const PDF_TRANSLATIONS = {
   ta: {
-    title: "விண்ணப்பதாரர் பதிவு அறிக்கை",
-    registrationId: "பதிவு இலக்கம்",
-    status: "பதிவு நிலை",
-    submittedAt: "சமர்ப்பிக்கப்பட்ட நேரம்",
-    personal: "தனிப்பட்ட தகவல்கள்",
-    fullName: "விண்ணப்பதாரரின் முழுப் பெயர்",
-    dob: "பிறந்த தேதி",
-    gender: "பாலினம்",
-    phone: "தொடர்பு இலக்கம்",
-    email: "மின்னஞ்சல் முகவரி",
-    address: "முழு முகவரி",
-    language: "படிவ மொழி",
-    consent: "ஒப்புதல் வழங்கப்பட்டது",
-    achievements: "சாதனைகள் மற்றும் தகுதிகள்",
-    answer: "பதில்",
-    notAnswered: "தெரிவுசெய்யப்படவில்லை",
-    certificates: "இணைக்கப்பட்ட சான்றிதழ்கள்",
-    noCertificates: "சான்றிதழ்கள் பதிவேற்றப்படவில்லை.",
-    event: "நிகழ்வு விவரங்கள்",
-    eventName: "நிகழ்வு",
-    eventDate: "நிகழ்வு தேதி",
-    eventTime: "நிகழ்வு நேரம்",
-    venue: "நிகழ்வு இடம்",
-    footer: "அங்கீகரிக்கப்பட்ட நிகழ்வு நிர்வாகப் பயன்பாட்டிற்காக உருவாக்கப்பட்டது.",
-    yes: "ஆம்",
-    no: "இல்லை",
-    male: "ஆண்",
-    female: "பெண்",
-    tamil: "தமிழ்",
-    english: "ஆங்கிலம்",
-    pending: "நிலுவையில்",
-    submitted: "சமர்ப்பிக்கப்பட்டது",
+    title: "à®µà®¿à®£à¯à®£à®ªà¯à®ªà®¤à®¾à®°à®°à¯ à®ªà®¤à®¿à®µà¯ à®…à®±à®¿à®•à¯à®•à¯ˆ",
+    registrationId: "à®ªà®¤à®¿à®µà¯ à®‡à®²à®•à¯à®•à®®à¯",
+    status: "à®ªà®¤à®¿à®µà¯ à®¨à®¿à®²à¯ˆ",
+    submittedAt: "à®šà®®à®°à¯à®ªà¯à®ªà®¿à®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿ à®¨à¯‡à®°à®®à¯",
+    personal: "à®¤à®©à®¿à®ªà¯à®ªà®Ÿà¯à®Ÿ à®¤à®•à®µà®²à¯à®•à®³à¯",
+    fullName: "à®µà®¿à®£à¯à®£à®ªà¯à®ªà®¤à®¾à®°à®°à®¿à®©à¯ à®®à¯à®´à¯à®ªà¯ à®ªà¯†à®¯à®°à¯",
+    dob: "à®ªà®¿à®±à®¨à¯à®¤ à®¤à¯‡à®¤à®¿",
+    gender: "à®ªà®¾à®²à®¿à®©à®®à¯",
+    phone: "à®¤à¯Šà®Ÿà®°à¯à®ªà¯ à®‡à®²à®•à¯à®•à®®à¯",
+    email: "à®®à®¿à®©à¯à®©à®žà¯à®šà®²à¯ à®®à¯à®•à®µà®°à®¿",
+    address: "à®®à¯à®´à¯ à®®à¯à®•à®µà®°à®¿",
+    language: "à®ªà®Ÿà®¿à®µ à®®à¯Šà®´à®¿",
+    consent: "à®’à®ªà¯à®ªà¯à®¤à®²à¯ à®µà®´à®™à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿà®¤à¯",
+    achievements: "à®šà®¾à®¤à®©à¯ˆà®•à®³à¯ à®®à®±à¯à®±à¯à®®à¯ à®¤à®•à¯à®¤à®¿à®•à®³à¯",
+    answer: "à®ªà®¤à®¿à®²à¯",
+    notAnswered: "à®¤à¯†à®°à®¿à®µà¯à®šà¯†à®¯à¯à®¯à®ªà¯à®ªà®Ÿà®µà®¿à®²à¯à®²à¯ˆ",
+    certificates: "à®‡à®£à¯ˆà®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿ à®šà®¾à®©à¯à®±à®¿à®¤à®´à¯à®•à®³à¯",
+    noCertificates: "à®šà®¾à®©à¯à®±à®¿à®¤à®´à¯à®•à®³à¯ à®ªà®¤à®¿à®µà¯‡à®±à¯à®±à®ªà¯à®ªà®Ÿà®µà®¿à®²à¯à®²à¯ˆ.",
+    event: "à®¨à®¿à®•à®´à¯à®µà¯ à®µà®¿à®µà®°à®™à¯à®•à®³à¯",
+    eventName: "à®¨à®¿à®•à®´à¯à®µà¯",
+    eventDate: "à®¨à®¿à®•à®´à¯à®µà¯ à®¤à¯‡à®¤à®¿",
+    eventTime: "à®¨à®¿à®•à®´à¯à®µà¯ à®¨à¯‡à®°à®®à¯",
+    venue: "à®¨à®¿à®•à®´à¯à®µà¯ à®‡à®Ÿà®®à¯",
+    footer: "à®…à®™à¯à®•à¯€à®•à®°à®¿à®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿ à®¨à®¿à®•à®´à¯à®µà¯ à®¨à®¿à®°à¯à®µà®¾à®•à®ªà¯ à®ªà®¯à®©à¯à®ªà®¾à®Ÿà¯à®Ÿà®¿à®±à¯à®•à®¾à®• à®‰à®°à¯à®µà®¾à®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿà®¤à¯.",
+    yes: "à®†à®®à¯",
+    no: "à®‡à®²à¯à®²à¯ˆ",
+    male: "à®†à®£à¯",
+    female: "à®ªà¯†à®£à¯",
+    tamil: "à®¤à®®à®¿à®´à¯",
+    english: "à®†à®™à¯à®•à®¿à®²à®®à¯",
+    pending: "à®¨à®¿à®²à¯à®µà¯ˆà®¯à®¿à®²à¯",
+    submitted: "à®šà®®à®°à¯à®ªà¯à®ªà®¿à®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿà®¤à¯",
   },
   en: {
     title: "APPLICANT REGISTRATION REPORT",
@@ -219,10 +219,10 @@ function pdfAnswer(answer: string | null | undefined, tamil: boolean): string {
   if (!answer) return tamil ? PDF_TRANSLATIONS.ta.notAnswered : PDF_TRANSLATIONS.en.notAnswered;
   if (tamil) return answer;
   const labels: Record<string, string> = {
-    "ஆம்": "Yes",
-    "இல்லை": "No",
-    "தேர்ச்சி பெற்றுள்ளேன்": "Passed",
-    "தேர்ச்சி பெறவில்லை": "Not Passed",
+    "à®†à®®à¯": "Yes",
+    "à®‡à®²à¯à®²à¯ˆ": "No",
+    "à®¤à¯‡à®°à¯à®šà¯à®šà®¿ à®ªà¯†à®±à¯à®±à¯à®³à¯à®³à¯‡à®©à¯": "Passed",
+    "à®¤à¯‡à®°à¯à®šà¯à®šà®¿ à®ªà¯†à®±à®µà®¿à®²à¯à®²à¯ˆ": "Not Passed",
   };
   return labels[answer] ?? answer;
 }
@@ -368,7 +368,7 @@ async function checkPassword(
 
   if (
     !Number.isInteger(iterations) ||
-    iterations < 210000 ||
+    iterations < 100000 ||
     iterations > 1000000
   ) {
     return false;
@@ -882,14 +882,14 @@ const PDF_MUTED = rgb(0.39, 0.45, 0.57);
 const PDF_LINE = rgb(0.87, 0.90, 0.96);
 
 function pdfCleanText(value: unknown): string {
-  const input = String(value ?? "—")
+  const input = String(value ?? "â€”")
     .replaceAll("\r\n", "\n")
     .replaceAll("\r", "\n");
   const cleaned = Array.from(input).filter((character) => {
     const code = character.charCodeAt(0);
     return code === 10 || code >= 32;
   }).join("").trim();
-  return cleaned || "—";
+  return cleaned || "â€”";
 }
 
 // Route Tamil code points to Noto Sans Tamil and Latin characters
@@ -971,7 +971,7 @@ function wrapMixed(
     }
     if (current) lines.push(current);
   }
-  return lines.length ? lines : ["—"];
+  return lines.length ? lines : ["â€”"];
 }
 
 async function buildApplicantPdf(
@@ -1028,7 +1028,7 @@ async function buildApplicantPdf(
     const lineHeight = options.lineHeight ?? size * 1.65;
     const indent = options.indent ?? 0;
     const width = PDF_CONTENT_WIDTH - indent;
-    const lines = wrapMixed(String(value ?? "—"), size, width, latinFont, tamilFont);
+    const lines = wrapMixed(String(value ?? "â€”"), size, width, latinFont, tamilFont);
     for (const line of lines) {
       ensureSpace(lineHeight + 4);
       let x = PDF_MARGIN + indent;
@@ -1077,7 +1077,7 @@ async function buildApplicantPdf(
 
   field(t.registrationId, registration.id);
   field(t.status, registration.status === "submitted" ? t.submitted : t.pending);
-  field(t.submittedAt, registration.submitted_at ?? "—");
+  field(t.submittedAt, registration.submitted_at ?? "â€”");
 
   section(t.personal);
   field(t.fullName, registration.applicant_full_name);
@@ -2113,3 +2113,4 @@ if (admin) {
     origin
   );
 }
+
