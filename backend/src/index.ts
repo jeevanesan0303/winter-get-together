@@ -527,8 +527,8 @@ function confirmationEmail(
   const tamil = recipient.language === "ta";
   const name = escapeEmailHTML(recipient.applicant_full_name);
   const id = escapeEmailHTML(registrationId);
-  const logo1 = emailLogoUrl(logoBase, "logo-1.webp");
-  const logo2 = emailLogoUrl(logoBase, "logo-2.webp");
+  const logo1 = emailLogoUrl(logoBase, "logo-1.png");
+  const logo2 = emailLogoUrl(logoBase, "logo-2.png");
 
   const subject = tamil
     ? `Winter Get Together 2026 - பதிவு உறுதிப்படுத்தல் (${registrationId})`
