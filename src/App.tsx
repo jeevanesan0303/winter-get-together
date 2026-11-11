@@ -76,6 +76,7 @@ type PersonalInformation = {
   dob: string;
   gender: string;
   phone: string;
+  email: string;
   address: string;
   agreed: boolean;
 };
@@ -114,6 +115,7 @@ const EMPTY_PERSONAL: PersonalInformation = {
   dob: "",
   gender: "",
   phone: "",
+  email: "",
   address: "",
   agreed: false,
 };
@@ -133,8 +135,8 @@ const FORM_TEXT = {
     personalTitle: "தனிப்பட்ட தகவல்கள்",
     achievementsTitle: "சாதனைகள் மற்றும் தகுதிகள்",
     reviewTitle: "பதிவு விவரங்களைச் சரிபார்க்கவும்",
-    fullName: "முழுப் பெயர்",
-    namePlaceholder: "உங்கள் முழுப் பெயரை உள்ளிடவும்",
+    fullName: "விண்ணப்பதாரரின் முழுப் பெயர்",
+    namePlaceholder: "விண்ணப்பதாரரின் முழுப் பெயரை உள்ளிடவும்",
     dob: "பிறந்த தேதி",
     dobHint: "எதிர்காலத் தேதிகளைத் தெரிவுசெய்ய முடியாது.",
     gender: "பாலினம்",
@@ -142,6 +144,8 @@ const FORM_TEXT = {
     male: "ஆண்",
     female: "பெண்",
     phone: "தொடர்பு இலக்கம்",
+    email: "மின்னஞ்சல் முகவரி",
+    emailPlaceholder: "உங்கள் மின்னஞ்சல் முகவரியை உள்ளிடவும்",
     address: "முழு முகவரி",
     addressPlaceholder: "வீட்டு இலக்கம், வீதி, நகரம், அஞ்சல் குறியீடு, நாடு",
     country: "நாடு",
@@ -162,11 +166,12 @@ const FORM_TEXT = {
       "நான் வழங்கிய தகவல்கள் சரியானவை என்றும் நிகழ்வுப் பதிவிற்காக அவற்றைப் பயன்படுத்த ஒப்புக்கொள்கிறேன் என்றும் உறுதிப்படுத்துகிறேன்.",
     introduction:
       "உங்களுக்குப் பொருந்தும் சாதனைகளை மட்டும் தெரிவுசெய்யவும். அனைத்துக் கேள்விகளுக்கும் பதிலளிக்க வேண்டிய அவசியமில்லை. சாதனையைத் தெரிவுசெய்தால் அதற்கான சான்றிதழை இணைக்கவும்.",
-    invalidName: "உங்கள் முழுப் பெயரை உள்ளிடவும்.",
+    invalidName: "விண்ணப்பதாரரின் முழுப் பெயரை உள்ளிடவும்.",
     invalidDob: "சரியான பிறந்த தேதியை உள்ளிடவும். எதிர்காலத் தேதி அனுமதிக்கப்படாது.",
     invalidGender: "பாலினத்தைத் தெரிவுசெய்யவும்.",
     invalidAddress: "உங்கள் முழு முகவரியை உள்ளிடவும்.",
     invalidPhone: "சரியான தொடர்பு இலக்கத்தை உள்ளிடவும்.",
+    invalidEmail: "சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்.",
     missingProof: "தெரிவுசெய்த சாதனைக்கான சான்றிதழைப் பதிவேற்றவும்.",
     invalidFile: "PDF, JPG அல்லது PNG கோப்பை மட்டும் பதிவேற்றவும்.",
     fileSize: "கோப்பு அளவு 20 MB-ஐ விட அதிகமாக இருக்கக்கூடாது.",
@@ -191,8 +196,8 @@ const FORM_TEXT = {
     personalTitle: "Personal Information",
     achievementsTitle: "Achievements & Qualifications",
     reviewTitle: "Review Registration",
-    fullName: "Full Name",
-    namePlaceholder: "Enter your full name",
+    fullName: "Applicant Full Name",
+    namePlaceholder: "Enter applicant full name",
     dob: "Date of Birth",
     dobHint: "Future dates are not allowed.",
     gender: "Gender",
@@ -200,6 +205,8 @@ const FORM_TEXT = {
     male: "Male",
     female: "Female",
     phone: "Contact Number",
+    email: "Email Address",
+    emailPlaceholder: "Enter your email address",
     address: "Full Address",
     addressPlaceholder: "House number, street, city, postcode, country",
     country: "Country",
@@ -220,11 +227,12 @@ const FORM_TEXT = {
       "I confirm that the information provided is correct and agree to its use for event registration.",
     introduction:
       "Select only the achievements that apply to you. All questions are optional. If you select an achievement, you must upload the relevant supporting certificate.",
-    invalidName: "Please enter your full name.",
+    invalidName: "Please enter the applicant full name.",
     invalidDob: "Enter a valid date of birth. Future dates are not allowed.",
     invalidGender: "Please select your gender.",
     invalidAddress: "Please enter your full address.",
     invalidPhone: "Please enter a valid contact number.",
+    invalidEmail: "Please enter a valid email address.",
     missingProof: "Please upload a certificate for the selected achievement.",
     invalidFile: "Only PDF, JPG and PNG documents are allowed.",
     fileSize: "The maximum file size is 20 MB.",
@@ -1176,6 +1184,9 @@ function RegistrationPage({
       return `${t.invalidPhone} (${UK_DIAL_CODE}, ${UK_PHONE_LENGTH} digits)`;
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personal.email.trim())) {
+      return t.invalidEmail;
+    }
     if (personal.address.trim().length < 8) return t.invalidAddress;
     return "";
   }
@@ -1271,6 +1282,7 @@ function RegistrationPage({
         personal: {
           ...personal,
           fullName: personal.fullName.trim(),
+          email: personal.email.trim(),
           address: personal.address.trim(),
         },
         answers: { ...answers },
@@ -1398,6 +1410,23 @@ function RegistrationPage({
                   </FormField>
 
                   <div className="grid-full">
+                    <FormField label={t.email} required>
+                      <input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        maxLength={254}
+                        placeholder={t.emailPlaceholder}
+                        value={personal.email}
+                        onChange={(e) =>
+                          updatePersonal("email", e.target.value)
+                        }
+                        aria-label={t.email}
+                      />
+                    </FormField>
+                  </div>
+
+                  <div className="grid-full">
                     <FormField label={t.address} required>
                       <textarea
                         rows={3}
@@ -1479,6 +1508,10 @@ function RegistrationPage({
                     <ReviewItem
                       label={t.phone}
                       value={personal.phone}
+                    />
+                    <ReviewItem
+                      label={t.email}
+                      value={personal.email}
                     />
                     <ReviewItem
                       label={t.address}
