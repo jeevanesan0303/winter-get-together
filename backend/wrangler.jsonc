@@ -10,6 +10,15 @@
 
   "workers_dev": true,
 
+  "keep_vars": true,
+
+  "vars": {
+    "EMAIL_LOGO_BASE_URL": "https://winter-get-together.purple-forest-fa52.workers.dev",
+    "RESEND_EMAIL_ENABLED": "true",
+    "RESEND_FROM_EMAIL": "registration@events.xyphoraprimemanagement.com",
+    "RESEND_FROM_NAME": "Winter Get Together 2026"
+  },
+
   "assets": {
     "directory": "../dist",
     "binding": "ASSETS",
