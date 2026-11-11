@@ -39,7 +39,7 @@ if (
 }
 
 const salt = randomBytes(16);
-const iterations = 210000;
+const iterations = 100000;
 
 const hash = pbkdf2Sync(
   password,
@@ -151,4 +151,5 @@ try {
     });
   }
 }
+
 

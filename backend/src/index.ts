@@ -745,10 +745,16 @@ async function sendConfirmationWithResend(
 
 function resendIsEnabledLocally(request: Request, env: Env): boolean {
   const hostname = new URL(request.url).hostname;
-  return (
-    env.RESEND_EMAIL_ENABLED === "true" &&
-    (hostname === "127.0.0.1" || hostname === "localhost")
-  );
+  
+return (
+  env.RESEND_EMAIL_ENABLED === "true" &&
+  (
+    hostname === "127.0.0.1" ||
+    hostname === "localhost" ||
+    hostname === "winter-get-together.purple-forest-fa52.workers.dev"
+  )
+);
+
 }
 
 async function completeRegistration(
