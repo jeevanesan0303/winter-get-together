@@ -637,7 +637,7 @@ function confirmationEmail(
     "",
     `${idLabel}: ${registrationId}`,
     `${dateLabel}: 13 December 2026`,
-    `${timeLabel}: 5:00 PM - 10:00 PM (UK)`,
+    `${timeLabel}: 4:00 PM - 10:00 PM (UK)`,
     `${venueLabel}: St Boniface Social Club, 185 Mitcham Road, London SW17 9PG`,
     "",
     closing,
